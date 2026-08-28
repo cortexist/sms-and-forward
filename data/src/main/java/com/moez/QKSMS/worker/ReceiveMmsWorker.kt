@@ -194,6 +194,12 @@ class ReceiveMmsWorker(appContext: Context, workerParams: WorkerParameters)
                             return Result.failure(inputData)
                         }
 
+                        // sms-bridge: forward to the desktop. Placed after the block
+                        // and content-filter checks above, which delete a message and
+                        // return early -- so only messages that actually survived get
+                        // forwarded, and a filtered one is never resurrected remotely.
+                        ForwardMessageWorker.enqueue(applicationContext, message.id)
+
                         // update the conversation
                         conversationRepo.updateConversations(listOf(message.threadId))
                         val conversation =

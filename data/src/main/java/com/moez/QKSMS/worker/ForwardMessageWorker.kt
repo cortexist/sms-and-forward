@@ -17,8 +17,14 @@
 package dev.octoshrimpy.quik.worker
 
 import android.content.Context
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import dev.octoshrimpy.quik.bridge.BridgeConfig
 import dev.octoshrimpy.quik.model.Message
 import dev.octoshrimpy.quik.repository.MessageRepository
@@ -26,9 +32,11 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -37,6 +45,19 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
 
     companion object {
         const val INPUT_DATA_KEY_MESSAGE_ID = "messageId"
+        const val MAX_ATTACHMENT = 4 * 1024 * 1024   // an MMS part larger than this is not worth the tailnet
+
+        fun enqueue(context: Context, messageId: Long) {
+            WorkManager.getInstance(context).enqueue(
+                OneTimeWorkRequestBuilder<ForwardMessageWorker>()
+                    .setInputData(workDataOf(INPUT_DATA_KEY_MESSAGE_ID to messageId))
+                    .setConstraints(
+                        Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED).build())
+                    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+                    .build()
+            )
+        }
         const val MAX_ATTEMPTS = 24        // with exponential backoff, ~ a day of retrying
 
         private val JSON = "application/json; charset=utf-8".toMediaType()
@@ -65,8 +86,16 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
         // A message deleted before we got to it is not a failure worth retrying.
         val message = messageRepo.getMessage(messageId) ?: return Result.success()
 
+        // Attachments first: the message record references them by digest, so posting
+        // the message before its parts would leave the desktop with a dangling id.
+        val attachments = try {
+            uploadParts(message, base(config.endpoint), config.token)
+        } catch (e: IOException) {
+            return retryOrGiveUp("attachment: ${e.javaClass.simpleName}")
+        }
+
         val payload = try {
-            encode(message)
+            encode(message, attachments)
         } catch (e: Exception) {
             Timber.e(e, "sms-bridge: could not encode message")
             return Result.failure()
@@ -128,7 +157,61 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
      * The v1 record shape. `id` must be stable across retries or every retry duplicates on the
      * far side - the Realm primary key gives us that for free.
      */
-    private fun encode(message: Message): String {
+    private fun base(endpoint: String) = endpoint.removeSuffix("/sms").trimEnd('/')
+
+    /** Upload image/video parts, returning the metadata to reference them by.
+     *
+     *  Content-addressed by SHA-256: the same picture forwarded twice is stored once,
+     *  and a retry cannot duplicate it. Non-media and oversized parts are described
+     *  but not uploaded -- the desktop shows that something was attached without the
+     *  tailnet carrying a 30 MB video.
+     */
+    private fun uploadParts(message: Message, base: String, token: String): JSONArray {
+        val out = JSONArray()
+        for (part in message.parts) {
+            val type = part.type
+            if (type.startsWith("text/") || type == "application/smil") continue
+
+            val bytes = try {
+                applicationContext.contentResolver.openInputStream(part.getUri())
+                    ?.use { it.readBytes() }
+            } catch (e: Exception) {
+                Timber.w("sms-bridge: part ${part.id} unreadable")
+                null
+            }
+
+            val meta = JSONObject()
+                .put("mime", type)
+                .put("name", part.name ?: "")
+                .put("size", bytes?.size ?: 0)
+            if (bytes != null && bytes.size in 1..MAX_ATTACHMENT) {
+                val sha = MessageDigest.getInstance("SHA-256").digest(bytes)
+                    .joinToString("") { "%02x".format(it) }
+                putAttachment(base, token, sha, type, bytes)
+                meta.put("sha", sha)
+            } else {
+                meta.put("skipped", if (bytes == null) "unreadable" else "too-large")
+            }
+            out.put(meta)
+        }
+        return out
+    }
+
+    private fun putAttachment(base: String, token: String, sha: String,
+                              mime: String, bytes: ByteArray) {
+        val req = Request.Builder().url("$base/attachments/$sha")
+            .addHeader("Authorization", "Bearer $token")
+            .addHeader("Content-Type", mime)
+            .post(bytes.toRequestBody(mime.toMediaType())).build()
+        client.newCall(req).execute().use { r ->
+            // 409 means the desktop already has it -- content addressing makes that
+            // success, not an error.
+            if (!r.isSuccessful && r.code != 409)
+                throw IOException("attachment upload failed: http ${r.code}")
+        }
+    }
+
+    private fun encode(message: Message, attachments: JSONArray = JSONArray()): String {
         val kind = if (message.type == Message.TYPE_MMS) "mms" else "sms"
         val body = message.body.ifBlank {
             // MMS keeps its text in parts rather than in body.
@@ -150,6 +233,7 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
             // handle for a conversation; sending it lets a delete name the chain
             // exactly instead of relying on address matching.
             put("thread", message.threadId)
+            if (attachments.length() > 0) put("parts", attachments)
         }.toString()
     }
 }
