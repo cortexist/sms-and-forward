@@ -164,9 +164,27 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
             "deleted ${ids.size}"
         }
         "delete_conversations" -> {
-            val t = args.longs("threads")
-            conversationRepo.deleteConversations(*t.toLongArray())
-            "deleted ${t.size} conversation(s)"
+            // Addressable either way. getConversation (not getOrCreate) on purpose:
+            // deleting a conversation must never create one as a side effect.
+            val byId = args.longs("threads")
+            val byAddr = args.strings("addrs").mapNotNull {
+                conversationRepo.getConversation(listOf(it))?.id
+            }
+            val t = (byId + byAddr).distinct()
+            if (t.isEmpty()) "no matching conversation" else {
+                conversationRepo.deleteConversations(*t.toLongArray())
+                "deleted ${t.size} conversation(s)"
+            }
+        }
+        // FIFO trim. Evaluated here because only the phone holds the complete chain;
+        // the desktop's archive starts wherever forwarding started, so it cannot know
+        // which messages are genuinely the oldest.
+        "delete_old_messages" -> {
+            val days = args.optInt("days", 0)
+            if (days <= 0) "refused: days must be > 0" else {
+                messageRepo.deleteOldMessages(days)
+                "deleted messages older than $days day(s)"
+            }
         }
         "mark_read" -> "marked ${messageRepo.markRead(args.longs("threads"))} read"
         "mark_unread" -> "marked ${messageRepo.markUnread(args.longs("threads"))} unread"
@@ -251,6 +269,11 @@ private fun JSONObject.longs(key: String): List<Long> {
             else -> null
         }
     }
+}
+
+private fun JSONObject.strings(key: String): List<String> {
+    val a = optJSONArray(key) ?: return emptyList()
+    return (0 until a.length()).map { a.optString(it) }.filter { it.isNotBlank() }
 }
 
 private fun JSONObject.optNullString(key: String): String? =

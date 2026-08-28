@@ -146,6 +146,10 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
             put("body", body)
             put("kind", kind)
             put("sub", message.subId)
+            // The desktop groups by address, but the phone's threadId is the precise
+            // handle for a conversation; sending it lets a delete name the chain
+            // exactly instead of relying on address matching.
+            put("thread", message.threadId)
         }.toString()
     }
 }
