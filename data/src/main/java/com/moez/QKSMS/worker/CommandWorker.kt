@@ -76,11 +76,17 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
 
         /** The quiet-case trigger. 15 minutes is WorkManager's floor for periodic work,
          *  and it is the ceiling on how stale a desktop action can look -- acceptable for
-         *  delete/block/archive, which is why sending is not routed through here. */
+         *  delete/block/archive, which is why sending is not routed through here.
+         *
+         *  UPDATE, not KEEP, and this matters: reinstalling the app makes the platform
+         *  cancel its jobs while WorkManager's own database still records the work as
+         *  enqueued, so KEEP sees "already there", does nothing, and the worker silently
+         *  never runs again. Observed exactly that on 2026-08-27. HousekeepingWorker
+         *  already uses UPDATE for the same reason. */
         fun schedulePeriodic(context: Context) {
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 "$UNIQUE_NAME-periodic",
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 PeriodicWorkRequestBuilder<CommandWorker>(15, TimeUnit.MINUTES)
                     .setConstraints(net())
                     .build()
