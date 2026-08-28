@@ -61,7 +61,12 @@ object PartUploader {
         return false
     }
 
-    const val THUMB_PX = 160        // sized for a half-block render, not for viewing
+    // 320, not 160. A 160px thumbnail only fills about 16-20 terminal cells at
+    // foot's cell width, so a 40-cell box upscaled it into mush -- and a portrait
+    // photo inside a 160px bounding box is only ~100px wide, worse still. Measured
+    // on this archive: 15.2 KB each, 27 MB for ~1,750 images, against 1.56 GB of
+    // originals. Cheap enough that sharpness wins.
+    const val THUMB_PX = 320
     const val THUMB_QUALITY = 72
 
     /**
@@ -69,8 +74,8 @@ object PartUploader {
      *
      * inSampleSize decodes every Nth pixel straight out of the JPEG rather than
      * decoding it fully and shrinking afterwards, so the full-size bitmap is never
-     * materialised. Measured on this archive: ~16 ms and ~4.7 KB per image, against
-     * a 2.1 MB original -- 454x smaller, and about 8 MB for a ten-year history.
+     * materialised. Measured on this archive: ~16 ms and ~15 KB per image, against
+     * a 2.1 MB original -- 140x smaller, and about 27 MB for a ten-year history.
      * The desktop is a management tool, so a thumbnail is what it almost always
      * wants; the original stays on the phone until something asks for it.
      */
