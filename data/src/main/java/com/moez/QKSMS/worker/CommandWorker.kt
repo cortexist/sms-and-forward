@@ -62,6 +62,12 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
         const val UNIQUE_NAME = "sms-bridge-commands"
         const val MAX_ATTEMPTS = 12
 
+        // Commands applied per run. An attachment fetch is a megabyte or two off the
+        // phone, so a queue of two dozen outlives the worker -- and because the ack
+        // only happens after the whole batch, everything done so far was thrown away
+        // on the first failure. Small batches commit progress instead.
+        const val PER_RUN = 6
+
         private val JSON = "application/json; charset=utf-8".toMediaType()
 
         /** Drain now. Unique + KEEP: several forwards arriving together must not
@@ -148,9 +154,12 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
 
         if (commands.length() == 0) return Result.success()
 
+        val take = minOf(commands.length(), PER_RUN)
+        val more = commands.length() > take
+
         val acked = JSONArray()
         val results = JSONObject()
-        for (i in 0 until commands.length()) {
+        for (i in 0 until take) {
             val cmd = commands.optJSONObject(i) ?: continue
             val id = cmd.optString("id")
             if (id.isBlank()) continue
@@ -168,6 +177,8 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
 
         return try {
             ack("$base/commands/ack", config.token, acked, results)
+            // Come straight back for the rest rather than waiting for the next poll.
+            if (more) enqueue(applicationContext)
             Result.success()
         } catch (e: IOException) {
             // The work was done but the ack did not land. Retrying is safe: applying
