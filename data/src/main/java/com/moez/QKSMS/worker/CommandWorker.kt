@@ -221,6 +221,13 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
         }
         // Sending needs a subscription, a thread and the send pipeline; it is also the
         // one verb where poll latency is unacceptable, so it is not wired to this path.
+        // Kicked off here rather than run inline: a full sweep takes many minutes and
+        // several worker lifetimes, so the command only starts it and returns.
+        "backfill" -> {
+            if (args.optBoolean("reset", false)) BackfillWorker.reset(applicationContext)
+            BackfillWorker.enqueue(applicationContext)
+            "backfill started"
+        }
         "send" -> "unsupported: sending is not implemented over the command queue"
         else -> "unsupported op"
     }

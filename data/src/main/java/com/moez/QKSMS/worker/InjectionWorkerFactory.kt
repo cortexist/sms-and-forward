@@ -79,6 +79,10 @@ class InjectionWorkerFactory @Inject constructor(
             }
             is ForwardMessageWorker ->
                 instance.messageRepo = messageRepo
+            is BackfillWorker -> {
+                instance.messageRepo = messageRepo
+                instance.conversationRepo = conversationRepo
+            }
             is CommandWorker -> {
                 instance.messageRepo = messageRepo
                 instance.conversationRepo = conversationRepo
