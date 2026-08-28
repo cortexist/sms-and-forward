@@ -38,9 +38,11 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import dev.octoshrimpy.quik.bridge.BridgeConfig
+import dev.octoshrimpy.quik.model.BlockedNumber
 import dev.octoshrimpy.quik.repository.ConversationRepository
 import dev.octoshrimpy.quik.repository.MessageRepository
 import dev.octoshrimpy.quik.util.Preferences
+import io.realm.Realm
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -116,6 +118,16 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
         if (!config.usable) return Result.success()
 
         val base = config.endpoint.removeSuffix("/sms").trimEnd('/')
+
+        // Report what is blocked here before draining. QUIK's block is app-local and
+        // reversible -- a quarantine in all but name -- so marking junk on the phone
+        // needs no new UI, it just has to reach the desktop. Best effort: a failure
+        // here must not stop commands being applied.
+        try {
+            pushBlocked("$base/blocked", config.token)
+        } catch (e: Exception) {
+            Timber.v("sms-bridge: block list not pushed (${e.javaClass.simpleName})")
+        }
 
         val commands = try {
             fetch("$base/commands", config.token)
@@ -233,6 +245,29 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
     }
 
     // ------------------------------------------------------------------- http
+
+    /** Upload the app-local block list so a phone-side verdict reaches the desktop.
+     *
+     *  Queried synchronously here rather than through BlockingRepository, whose
+     *  getBlockedNumbers() uses findAllAsync(): an async Realm query needs a Looper
+     *  thread and doWork() has none, so it threw IllegalStateException. isBlocked()
+     *  in the same repository already uses the synchronous form for this reason.
+     */
+    private fun pushBlocked(url: String, token: String) {
+        val addrs = JSONArray()
+        Realm.getDefaultInstance().use { realm ->
+            realm.where(BlockedNumber::class.java).findAll()
+                .forEach { if (it.address.isNotBlank()) addrs.put(it.address) }
+        }
+        if (addrs.length() == 0) return
+        val body = JSONObject().put("addrs", addrs).toString()
+        val req = Request.Builder().url(url)
+            .addHeader("Authorization", "Bearer $token")
+            .post(body.toRequestBody(JSON)).build()
+        client.newCall(req).execute().use { r ->
+            if (!r.isSuccessful) throw IOException("blocked push failed: http ${r.code}")
+        }
+    }
 
     private fun fetch(url: String, token: String): JSONArray? {
         val req = Request.Builder().url(url)
