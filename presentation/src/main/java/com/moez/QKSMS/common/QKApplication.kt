@@ -131,9 +131,17 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
         // register, or re-register, housekeeping work manager
         HousekeepingWorker.register(applicationContext)
 
-        // sms-bridge: quiet-case drain of the desktop command queue. Inert unless
-        // sms-bridge.json is present, and KEEP so it is not rescheduled on every launch.
+        // sms-bridge: drain whatever the desktop queued.
+        //
+        // Two calls on purpose. The periodic worker is the quiet-case safety net, but
+        // it cannot also be the prompt path: re-registering periodic work on every
+        // launch recalculates its window, so a frequently-opened app pushes the next
+        // run out indefinitely and the queue never drains. The one-shot below is what
+        // actually makes opening the app feel immediate.
+        //
+        // Both are inert unless sms-bridge.json is present.
         CommandWorker.schedulePeriodic(applicationContext)
+        CommandWorker.enqueue(applicationContext)
     }
 
     override fun activityInjector(): AndroidInjector<Activity> {
