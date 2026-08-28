@@ -28,7 +28,12 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Used for starting foreground service for backup/restore on Android P+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-<!--    <uses-permission android:name="android.permission.INTERNET" />-->
+    <!-- sms-bridge: QUIK ships with no network access by design, and this line was
+         deliberately commented out upstream. It is enabled here ONLY to forward received
+         messages to the user's own box over Tailscale. The forwarder is inert unless
+         sms-bridge.json is present, so installing this build does not by itself put the app
+         on the network. See data/.../bridge/BridgeConfig.kt. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_SMS" />

@@ -77,6 +77,8 @@ class InjectionWorkerFactory @Inject constructor(
                 instance.filterRepo = filterRepo
                 instance.contactsRepo = contactRepo
             }
+            is ForwardMessageWorker ->
+                instance.messageRepo = messageRepo
             is ReceiveMmsWorker -> {
                 instance.syncRepo = syncRepo
                 instance.activeConversationManager = activeConversationManager

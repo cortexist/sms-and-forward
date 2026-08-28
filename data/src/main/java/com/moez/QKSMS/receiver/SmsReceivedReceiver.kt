@@ -22,17 +22,22 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony.Sms
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import dagger.android.AndroidInjection
 import dev.octoshrimpy.quik.repository.MessageRepository
+import dev.octoshrimpy.quik.worker.ForwardMessageWorker
 import dev.octoshrimpy.quik.worker.ReceiveSmsWorker
 import dev.octoshrimpy.quik.worker.ReceiveSmsWorker.Companion.INPUT_DATA_KEY_MESSAGE_ID
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class SmsReceivedReceiver : BroadcastReceiver() {
@@ -61,6 +66,29 @@ class SmsReceivedReceiver : BroadcastReceiver() {
                         OneTimeWorkRequestBuilder<ReceiveSmsWorker>()
                             .setInputData(workDataOf(INPUT_DATA_KEY_MESSAGE_ID to messageId))
                             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                            .build()
+                    )
+
+                    // sms-bridge: forward to the box. Enqueued independently rather than
+                    // chained, so a bridge failure can never delay or block notification of a
+                    // received message - the SMS app is the product, the bridge is an add-on.
+                    // The worker is inert unless sms-bridge.json is present.
+                    WorkManager.getInstance(context).enqueue(
+                        OneTimeWorkRequestBuilder<ForwardMessageWorker>()
+                            .setInputData(
+                                workDataOf(
+                                    ForwardMessageWorker.INPUT_DATA_KEY_MESSAGE_ID to messageId
+                                )
+                            )
+                            .setConstraints(
+                                Constraints.Builder()
+                                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                                    .build()
+                            )
+                            .setBackoffCriteria(
+                                BackoffPolicy.EXPONENTIAL,
+                                30, TimeUnit.SECONDS
+                            )
                             .build()
                     )
                     pendingResult.finish()
