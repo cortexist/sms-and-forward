@@ -35,6 +35,7 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import dev.octoshrimpy.quik.bridge.BridgeConfig
+import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.Message
 import dev.octoshrimpy.quik.repository.ConversationRepository
 import dev.octoshrimpy.quik.repository.MessageRepository
@@ -106,6 +107,8 @@ class BackfillWorker(appContext: Context, params: WorkerParameters)
 
         val base = config.endpoint.removeSuffix("/sms").trimEnd('/')
         val url = "$base/messages/bulk"
+        // Attachments make a thread take far longer than text alone, so the budget
+        // buys fewer conversations per run; the worker simply reschedules more often.
 
         val done = prefs.getStringSet(KEY_DONE, emptySet())!!.toMutableSet()
         // Snapshot, not a live query: this loop can run for a minute and a half, and a
@@ -126,7 +129,22 @@ class BackfillWorker(appContext: Context, params: WorkerParameters)
             if (System.currentTimeMillis() > deadline) break
 
             val messages = try {
-                messageRepo.getMessagesSync(threadId).map { encode(it) }
+                messageRepo.getMessagesSync(threadId).map { m ->
+                    // Digests and sizes only -- no bytes. Pulling every historic image
+                    // is roughly 3 GB here and almost none of it gets looked at; the
+                    // desktop asks for the ones it wants through the command queue.
+                    val parts = PartUploader.upload(
+                        applicationContext, m, base, config.token, client,
+                        sendBytes = false)
+                    encode(m, parts)
+                }
+            } catch (e: IOException) {
+                // A network failure must NOT mark the thread complete. This handler was
+                // written for Realm read errors and swallowed upload failures too, so a
+                // dropped connection permanently skipped the conversation.
+                prefs.edit().putStringSet(KEY_DONE, done).apply()
+                Timber.v("sms-bridge: backfill paused on thread $threadId (network)")
+                return if (runAttemptCount >= 10) Result.failure() else Result.retry()
             } catch (e: Exception) {
                 Timber.w(e, "sms-bridge: could not read thread $threadId")
                 done.add(threadId.toString())   // do not wedge the sweep on one bad thread
@@ -163,7 +181,7 @@ class BackfillWorker(appContext: Context, params: WorkerParameters)
         return Result.success()
     }
 
-    private fun encode(m: Message): JSONObject {
+    private fun encode(m: Message, parts: JSONArray = JSONArray()): JSONObject {
         val kind = if (m.type == Message.TYPE_MMS) "mms" else "sms"
         val body = m.body.ifBlank {
             m.parts.filter { it.type.startsWith("text/") }.mapNotNull { it.text }
@@ -180,6 +198,7 @@ class BackfillWorker(appContext: Context, params: WorkerParameters)
             put("kind", kind)
             put("sub", m.subId)
             put("thread", m.threadId)
+            if (parts.length() > 0) put("parts", parts)
         }
     }
 

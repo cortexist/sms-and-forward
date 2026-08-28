@@ -26,6 +26,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dev.octoshrimpy.quik.bridge.BridgeConfig
+import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.Message
 import dev.octoshrimpy.quik.repository.MessageRepository
 import okhttp3.MediaType.Companion.toMediaType
@@ -36,7 +37,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
-import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -89,7 +89,8 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
         // Attachments first: the message record references them by digest, so posting
         // the message before its parts would leave the desktop with a dangling id.
         val attachments = try {
-            uploadParts(message, base(config.endpoint), config.token)
+            PartUploader.upload(applicationContext, message,
+                                base(config.endpoint), config.token, client)
         } catch (e: IOException) {
             return retryOrGiveUp("attachment: ${e.javaClass.simpleName}")
         }
@@ -158,58 +159,6 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
      * far side - the Realm primary key gives us that for free.
      */
     private fun base(endpoint: String) = endpoint.removeSuffix("/sms").trimEnd('/')
-
-    /** Upload image/video parts, returning the metadata to reference them by.
-     *
-     *  Content-addressed by SHA-256: the same picture forwarded twice is stored once,
-     *  and a retry cannot duplicate it. Non-media and oversized parts are described
-     *  but not uploaded -- the desktop shows that something was attached without the
-     *  tailnet carrying a 30 MB video.
-     */
-    private fun uploadParts(message: Message, base: String, token: String): JSONArray {
-        val out = JSONArray()
-        for (part in message.parts) {
-            val type = part.type
-            if (type.startsWith("text/") || type == "application/smil") continue
-
-            val bytes = try {
-                applicationContext.contentResolver.openInputStream(part.getUri())
-                    ?.use { it.readBytes() }
-            } catch (e: Exception) {
-                Timber.w("sms-bridge: part ${part.id} unreadable")
-                null
-            }
-
-            val meta = JSONObject()
-                .put("mime", type)
-                .put("name", part.name ?: "")
-                .put("size", bytes?.size ?: 0)
-            if (bytes != null && bytes.size in 1..MAX_ATTACHMENT) {
-                val sha = MessageDigest.getInstance("SHA-256").digest(bytes)
-                    .joinToString("") { "%02x".format(it) }
-                putAttachment(base, token, sha, type, bytes)
-                meta.put("sha", sha)
-            } else {
-                meta.put("skipped", if (bytes == null) "unreadable" else "too-large")
-            }
-            out.put(meta)
-        }
-        return out
-    }
-
-    private fun putAttachment(base: String, token: String, sha: String,
-                              mime: String, bytes: ByteArray) {
-        val req = Request.Builder().url("$base/attachments/$sha")
-            .addHeader("Authorization", "Bearer $token")
-            .addHeader("Content-Type", mime)
-            .post(bytes.toRequestBody(mime.toMediaType())).build()
-        client.newCall(req).execute().use { r ->
-            // 409 means the desktop already has it -- content addressing makes that
-            // success, not an error.
-            if (!r.isSuccessful && r.code != 409)
-                throw IOException("attachment upload failed: http ${r.code}")
-        }
-    }
 
     private fun encode(message: Message, attachments: JSONArray = JSONArray()): String {
         val kind = if (message.type == Message.TYPE_MMS) "mms" else "sms"

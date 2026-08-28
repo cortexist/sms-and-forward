@@ -47,6 +47,7 @@ import dev.octoshrimpy.quik.R
 import dev.octoshrimpy.quik.common.ExternalNavigator
 import dev.octoshrimpy.quik.common.androidxcompat.drawerOpen
 import dev.octoshrimpy.quik.common.base.QkThemedActivity
+import dev.octoshrimpy.quik.worker.CommandWorker
 import dev.octoshrimpy.quik.common.util.extensions.autoScrollToStart
 import dev.octoshrimpy.quik.common.util.extensions.dismissKeyboard
 import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
@@ -381,7 +382,17 @@ class MainActivity : QkThemedActivity(), MainView {
     }
 
     override fun onResume() =
-        super.onResume().also { activityResumedIntent.onNext(true) }
+        super.onResume().also {
+            activityResumedIntent.onNext(true)
+            // sms-bridge: drain whatever the desktop queued.
+            //
+            // Application.onCreate is not enough. Opening an app that is already
+            // running does not re-create it, so a queued command sat until the
+            // 15-minute periodic worker came round -- which read as the bridge being
+            // broken. Resume is the event that actually means "the user is here".
+            // enqueueUniqueWork(KEEP) makes repeated resumes cheap.
+            CommandWorker.enqueue(applicationContext)
+        }
 
     override fun onPause() =
         super.onPause().also { activityResumedIntent.onNext(false) }

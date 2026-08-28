@@ -38,6 +38,7 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import dev.octoshrimpy.quik.bridge.BridgeConfig
+import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.BlockedNumber
 import dev.octoshrimpy.quik.repository.ConversationRepository
 import dev.octoshrimpy.quik.repository.MessageRepository
@@ -113,11 +114,20 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
     @Inject lateinit var conversationRepo: ConversationRepository
     @Inject lateinit var prefs: Preferences
 
+    // Set for the lifetime of a doWork() call so the dispatch table can reach them.
+    private var endpointBase: String = ""
+    private var authToken: String = ""
+
+    private fun baseOf() = endpointBase
+    private fun tokenOf() = authToken
+
     override fun doWork(): Result {
         val config = BridgeConfig.load(applicationContext)
         if (!config.usable) return Result.success()
 
         val base = config.endpoint.removeSuffix("/sms").trimEnd('/')
+        endpointBase = base
+        authToken = config.token
 
         // Report what is blocked here before draining. QUIK's block is app-local and
         // reversible -- a quarantine in all but name -- so marking junk on the phone
@@ -239,6 +249,20 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
             if (args.optBoolean("reset", false)) BackfillWorker.reset(applicationContext)
             BackfillWorker.enqueue(applicationContext)
             "backfill started"
+        }
+        // Fetch one image the desktop has chosen to look at. Backfill records
+        // digests without bytes, so this is how a historic picture is retrieved --
+        // seconds for the one that is wanted, instead of gigabytes for all of them.
+        "fetch_attachment" -> {
+            val sha = args.optString("sha")
+            val mid = args.optString("message").substringAfterLast(':').toLongOrNull()
+            val msg = if (mid != null) messageRepo.getMessage(mid) else null
+            when {
+                sha.isBlank() || msg == null -> "no such message"
+                PartUploader.sendOne(applicationContext, msg, sha,
+                                     baseOf(), tokenOf(), client) -> "sent $sha"
+                else -> "digest not found in that message"
+            }
         }
         "send" -> "unsupported: sending is not implemented over the command queue"
         else -> "unsupported op"
