@@ -44,6 +44,7 @@ import dev.octoshrimpy.quik.manager.ReferralManager
 import dev.octoshrimpy.quik.migration.QkMigration
 import dev.octoshrimpy.quik.migration.QkRealmMigration
 import dev.octoshrimpy.quik.util.NightModeManager
+import dev.octoshrimpy.quik.worker.CommandWorker
 import dev.octoshrimpy.quik.worker.HousekeepingWorker
 import io.realm.Realm
 import io.realm.RealmConfiguration
@@ -129,6 +130,10 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
 
         // register, or re-register, housekeeping work manager
         HousekeepingWorker.register(applicationContext)
+
+        // sms-bridge: quiet-case drain of the desktop command queue. Inert unless
+        // sms-bridge.json is present, and KEEP so it is not rescheduled on every launch.
+        CommandWorker.schedulePeriodic(applicationContext)
     }
 
     override fun activityInjector(): AndroidInjector<Activity> {

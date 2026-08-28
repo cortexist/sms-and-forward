@@ -84,6 +84,13 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
                     response.isSuccessful -> {
                         // Deliberately not logging the body or any extracted code.
                         Timber.v("sms-bridge: forwarded message $messageId")
+                        // The response piggybacks whatever the desktop queued. Rather
+                        // than applying it here (which would drag every repository into
+                        // this worker), hand off to CommandWorker, which is the single
+                        // place commands are applied.
+                        if (hasCommands(response.peekBody(65536).string())) {
+                            CommandWorker.enqueue(applicationContext)
+                        }
                         Result.success()
                     }
                     // 401/413/400 will not improve by being sent again.
@@ -98,6 +105,14 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
             // The expected case while the box is resetting.
             retryOrGiveUp(e.javaClass.simpleName)
         }
+    }
+
+    /** True when the forward response carried queued commands. Never throws: a
+     *  malformed body must not turn a successful forward into a failure. */
+    private fun hasCommands(body: String): Boolean = try {
+        (JSONObject(body).optJSONArray("commands")?.length() ?: 0) > 0
+    } catch (e: Exception) {
+        false
     }
 
     private fun retryOrGiveUp(reason: String): Result =
