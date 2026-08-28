@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  sms-bridge: permit cleartext to the bridge host ONLY.
+
+  Android blocks cleartext HTTP by default from targetSdk 28, which is correct for the open
+  internet and is why the forwarder failed with UnknownServiceException before this existed.
+
+  Cleartext is acceptable for this one host and no other: the endpoint is a Tailscale address,
+  so the connection is already end-to-end encrypted by WireGuard before IP sees it, and the
+  socket on the far side is bound to the tailnet interface rather than to any LAN. TLS is not
+  available for it - `tailscale cert` refuses on this account ("does not support getting TLS
+  certs"), so HTTPS would mean a self-signed cert and a custom trust anchor, which is strictly
+  worse than a scoped exemption.
+
+  cleartextTrafficPermitted stays FALSE everywhere else, which is the default and is why this
+  file names a single host instead of setting android:usesCleartextTraffic="true" on the
+  whole application.
+
+  If the box's tailnet address changes, update it here or the forwarder starts failing with
+  UnknownServiceException again.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">100.99.132.67</domain>
+    </domain-config>
+</network-security-config>
