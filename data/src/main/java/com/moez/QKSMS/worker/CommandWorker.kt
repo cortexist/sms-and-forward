@@ -40,6 +40,7 @@ import androidx.work.WorkerParameters
 import dev.octoshrimpy.quik.bridge.BridgeConfig
 import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.BlockedNumber
+import dev.octoshrimpy.quik.model.Conversation
 import dev.octoshrimpy.quik.repository.ConversationRepository
 import dev.octoshrimpy.quik.repository.MessageRepository
 import dev.octoshrimpy.quik.util.Preferences
@@ -281,7 +282,16 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
 
     // ------------------------------------------------------------------- http
 
-    /** Upload the app-local block list so a phone-side verdict reaches the desktop.
+    /** Upload the app-local block state so a phone-side verdict reaches the desktop.
+     *
+     *  Two sources, because "Block" on a conversation only sets Conversation.blocked;
+     *  the BlockedNumber list is populated separately, and only when the QKSMS
+     *  blocking client is the active one. Reading BlockedNumber alone missed every
+     *  conversation the operator blocked from the list screen. Blocked conversations
+     *  carry their thread id, which is the identity the desktop keys verdicts on.
+     *
+     *  Always posted, even when empty: the desktop treats the payload as the complete
+     *  current state, so an unblock on the phone is a release on the desktop.
      *
      *  Queried synchronously here rather than through BlockingRepository, whose
      *  getBlockedNumbers() uses findAllAsync(): an async Realm query needs a Looper
@@ -290,12 +300,24 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
      */
     private fun pushBlocked(url: String, token: String) {
         val addrs = JSONArray()
+        val blocked = JSONArray()
+        val seen = HashSet<String>()
         Realm.getDefaultInstance().use { realm ->
             realm.where(BlockedNumber::class.java).findAll()
-                .forEach { if (it.address.isNotBlank()) addrs.put(it.address) }
+                .forEach { if (it.address.isNotBlank() && seen.add(it.address)) addrs.put(it.address) }
+            realm.where(Conversation::class.java).equalTo("blocked", true).findAll()
+                .forEach { c ->
+                    val convAddrs = JSONArray()
+                    c.recipients.forEach { r ->
+                        if (r.address.isNotBlank()) {
+                            convAddrs.put(r.address)
+                            if (seen.add(r.address)) addrs.put(r.address)
+                        }
+                    }
+                    blocked.put(JSONObject().put("thread", c.id).put("addrs", convAddrs))
+                }
         }
-        if (addrs.length() == 0) return
-        val body = JSONObject().put("addrs", addrs).toString()
+        val body = JSONObject().put("addrs", addrs).put("blocked", blocked).toString()
         val req = Request.Builder().url(url)
             .addHeader("Authorization", "Bearer $token")
             .post(body.toRequestBody(JSON)).build()
