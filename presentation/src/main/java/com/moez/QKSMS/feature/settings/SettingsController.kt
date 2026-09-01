@@ -76,10 +76,20 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
         TextInputDialog(activity!!, context.getString(R.string.settings_signature_title), signatureSubject::onNext)
     }
 
+    private val bridgeEndpointDialog: TextInputDialog by lazy {
+        TextInputDialog(activity!!, context.getString(R.string.settings_bridge_endpoint_title), bridgeEndpointSubject::onNext)
+    }
+
+    private val bridgeTokenDialog: TextInputDialog by lazy {
+        TextInputDialog(activity!!, context.getString(R.string.settings_bridge_token_title), bridgeTokenSubject::onNext)
+    }
+
     private val viewQksmsPlusSubject: Subject<Unit> = PublishSubject.create()
     private val startTimeSelectedSubject: Subject<Pair<Int, Int>> = PublishSubject.create()
     private val endTimeSelectedSubject: Subject<Pair<Int, Int>> = PublishSubject.create()
     private val signatureSubject: Subject<String> = PublishSubject.create()
+    private val bridgeEndpointSubject: Subject<String> = PublishSubject.create()
+    private val bridgeTokenSubject: Subject<String> = PublishSubject.create()
 
     private val progressAnimator by lazy { ObjectAnimator.ofInt(binding.syncingProgress, "progress", 0, 0) }
 
@@ -138,6 +148,10 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
 
     override fun signatureChanged(): Observable<String> = signatureSubject
 
+    override fun bridgeEndpointChanged(): Observable<String> = bridgeEndpointSubject
+
+    override fun bridgeTokenChanged(): Observable<String> = bridgeTokenSubject
+
     override fun mmsSizeSelected(): Observable<Int> = mmsSizeDialog.adapter.menuItemClicks
 
     override fun messageLinkHandlingSelected(): Observable<Int> = messageLinkHandlingDialog.adapter.menuItemClicks
@@ -188,6 +202,14 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
 
         binding.disableScreenshots.checkbox?.isChecked = state.disableScreenshotsEnabled
 
+        binding.bridgeEnabled.checkbox?.isChecked = state.bridgeEnabled
+        binding.bridgeEndpoint.summary = state.bridgeEndpoint.takeIf { it.isNotBlank() }
+                ?: context.getString(R.string.settings_bridge_endpoint_summary)
+        binding.bridgeToken.summary = context.getString(when (state.bridgeTokenSet) {
+            true -> R.string.settings_bridge_token_set
+            false -> R.string.settings_bridge_token_unset
+        })
+
         when (state.syncProgress) {
             is SyncRepository.SyncProgress.Idle -> binding.syncingProgress.isVisible = false
 
@@ -237,6 +259,10 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun showDelayDurationDialog() = sendDelayDialog.show(activity!!)
 
     override fun showSignatureDialog(signature: String) = signatureDialog.setText(signature).show()
+
+    override fun showBridgeEndpointDialog(endpoint: String) = bridgeEndpointDialog.setText(endpoint).show()
+
+    override fun showBridgeTokenDialog(token: String) = bridgeTokenDialog.setText(token).show()
 
     override fun showMmsSizePicker() = mmsSizeDialog.show(activity!!)
 

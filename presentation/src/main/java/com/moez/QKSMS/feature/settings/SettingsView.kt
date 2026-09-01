@@ -32,6 +32,8 @@ interface SettingsView : QkViewContract<SettingsState> {
     fun textSizeSelected(): Observable<Int>
     fun sendDelaySelected(): Observable<Int>
     fun signatureChanged(): Observable<String>
+    fun bridgeEndpointChanged(): Observable<String>
+    fun bridgeTokenChanged(): Observable<String>
     fun mmsSizeSelected(): Observable<Int>
     fun messageLinkHandlingSelected(): Observable<Int>
 
@@ -42,6 +44,8 @@ interface SettingsView : QkViewContract<SettingsState> {
     fun showTextSizePicker()
     fun showDelayDurationDialog()
     fun showSignatureDialog(signature: String)
+    fun showBridgeEndpointDialog(endpoint: String)
+    fun showBridgeTokenDialog(token: String)
     fun showMmsSizePicker()
     fun showMessageLinkHandlingDialogPicker()
     fun showSwipeActions()

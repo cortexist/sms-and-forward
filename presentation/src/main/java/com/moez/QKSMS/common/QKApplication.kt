@@ -139,9 +139,13 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
         // run out indefinitely and the queue never drains. The one-shot below is what
         // actually makes opening the app feel immediate.
         //
-        // Both are inert unless sms-bridge.json is present.
+        // Both are inert unless the bridge is configured in settings.
+        //
+        // enqueueFresh, not enqueue: after a reinstall the unique record can be wedged
+        // ENQUEUED with its platform job gone, and KEEP would no-op forever (see the
+        // policy notes in CommandWorker). Process start is the safe place to REPLACE.
         CommandWorker.schedulePeriodic(applicationContext)
-        CommandWorker.enqueue(applicationContext)
+        CommandWorker.enqueueFresh(applicationContext)
     }
 
     override fun activityInjector(): AndroidInjector<Activity> {

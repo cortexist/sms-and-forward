@@ -74,9 +74,23 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
         /** Drain now. Unique + KEEP: several forwards arriving together must not
          *  stack up several drains of the same queue. */
         fun enqueue(context: Context) {
+            enqueue(context, ExistingWorkPolicy.KEEP)
+        }
+
+        /** Drain now, REPLACING any recorded run. For app start only: the reinstall
+         *  wedge described on schedulePeriodic() hits this unique name too -- the
+         *  platform job is cancelled but the record stays ENQUEUED, and every KEEP
+         *  thereafter is a silent no-op. Observed 2026-08-31: forwards flowing for
+         *  over an hour, each one calling enqueue(), zero drains. REPLACE at process
+         *  start clears the wedged record; the KEEP path stays correct between. */
+        fun enqueueFresh(context: Context) {
+            enqueue(context, ExistingWorkPolicy.REPLACE)
+        }
+
+        private fun enqueue(context: Context, policy: ExistingWorkPolicy) {
             WorkManager.getInstance(context).enqueueUniqueWork(
                 UNIQUE_NAME,
-                ExistingWorkPolicy.KEEP,
+                policy,
                 OneTimeWorkRequestBuilder<CommandWorker>()
                     .setConstraints(net())
                     .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
@@ -130,6 +144,8 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
 
     override fun doWork(): Result {
         val config = BridgeConfig.load(applicationContext)
+        // Logged even when inert: a queue that never drains must be visible in the log.
+        Timber.v("sms-bridge: command drain (usable=${config.usable}, attempt=$runAttemptCount)")
         if (!config.usable) return Result.success()
 
         val base = config.endpoint.removeSuffix("/sms").trimEnd('/')

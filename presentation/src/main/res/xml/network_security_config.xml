@@ -17,10 +17,13 @@
   whole application.
 
   If the box's tailnet address changes, update it here or the forwarder starts failing with
-  UnknownServiceException again.
+  UnknownServiceException again. That happened on the 2026-08-30 headscale migration
+  (100.99.132.67 -> 100.64.0.3); both the address and the MagicDNS name are listed now so the
+  endpoint can be written either way.
 -->
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">100.99.132.67</domain>
+        <domain includeSubdomains="false">100.64.0.3</domain>
+        <domain includeSubdomains="false">nowhere.tailnet.convolution.cloud</domain>
     </domain-config>
 </network-security-config>

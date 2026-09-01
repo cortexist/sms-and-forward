@@ -138,6 +138,12 @@ class Preferences @Inject constructor(
 
     val autoDeduplicate = rxPrefs.getBoolean("autoDeduplicateMessages", false)
 
+    // sms-bridge forwarder. Keys must match BridgeConfig in the data module, which reads the
+    // same default SharedPreferences without going through this class.
+    val bridgeEnabled = rxPrefs.getBoolean("bridgeEnabled", false)
+    val bridgeEndpoint = rxPrefs.getString("bridgeEndpoint", "")
+    val bridgeToken = rxPrefs.getString("bridgeToken", "")
+
     init {
         // Migrate from old night mode preference to new one, now that we support android Q night mode
         val nightModeSummary = rxPrefs.getInteger("nightModeSummary")

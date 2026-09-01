@@ -51,5 +51,8 @@ data class SettingsState(
     val messageLinkHandlingSummary: String = "Ask before opening",
     val messageLinkHandlingId: Int = 2,
     val disableScreenshotsEnabled: Boolean = false,
+    val bridgeEnabled: Boolean = false,
+    val bridgeEndpoint: String = "",
+    val bridgeTokenSet: Boolean = false,
     val syncProgress: SyncRepository.SyncProgress = SyncRepository.SyncProgress.Idle
 )

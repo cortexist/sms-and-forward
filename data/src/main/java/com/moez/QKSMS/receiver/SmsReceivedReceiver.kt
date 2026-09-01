@@ -72,7 +72,7 @@ class SmsReceivedReceiver : BroadcastReceiver() {
                     // sms-bridge: forward to the box. Enqueued independently rather than
                     // chained, so a bridge failure can never delay or block notification of a
                     // received message - the SMS app is the product, the bridge is an add-on.
-                    // The worker is inert unless sms-bridge.json is present.
+                    // The worker is inert unless the bridge is configured in settings.
                     WorkManager.getInstance(context).enqueue(
                         OneTimeWorkRequestBuilder<ForwardMessageWorker>()
                             .setInputData(

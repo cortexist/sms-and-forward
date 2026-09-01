@@ -3,23 +3,24 @@
  *
  * sms-bridge configuration.
  *
- * Read from a JSON file in the app-specific external directory, so it can be installed with a
- * plain `adb push` and needs no extra permission, no settings UI, and no exported receiver
- * (an exported config receiver would be a code-injection surface on a device that handles 2FA):
+ * Stored in the app's default SharedPreferences and edited in Settings (the "SMS bridge"
+ * section). The keys mirror Preferences in the domain module; this class reads them directly
+ * because the data module cannot depend on domain, and the workers that need the config only
+ * have a Context.
  *
- *   adb push sms-bridge.json /sdcard/Android/data/dev.octoshrimpy.quik.debug/files/
+ * A legacy sms-bridge.json in the app-specific external directory (the old adb-push install
+ * path) is imported into SharedPreferences once, then renamed to .imported — after that the
+ * file has no effect, so edit the settings, not the file.
  *
- *   { "enabled": true,
- *     "endpoint": "http://100.99.132.67:8090/sms",
- *     "token": "<the bearer token from ~/.sms2fa/token on the box>" }
- *
- * Absent or malformed config means DISABLED. The forwarder is inert until this file exists,
- * which is deliberate: QUIK ships with no network access at all, and turning that on should be
- * an explicit act rather than a side effect of installing a build.
+ * Absent or blank config means DISABLED. The forwarder stays inert until an endpoint and token
+ * are configured, which is deliberate: QUIK ships with no network access at all, and turning
+ * that on should be an explicit act rather than a side effect of installing a build.
  */
 package dev.octoshrimpy.quik.bridge
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
@@ -33,38 +34,49 @@ data class BridgeConfig(
         get() = enabled && endpoint.isNotBlank() && token.isNotBlank()
 
     companion object {
-        private const val FILE_NAME = "sms-bridge.json"
+        const val KEY_ENABLED = "bridgeEnabled"
+        const val KEY_ENDPOINT = "bridgeEndpoint"
+        const val KEY_TOKEN = "bridgeToken"
 
-        @Volatile private var cached: BridgeConfig? = null
-        @Volatile private var cachedAt: Long = 0
-        private const val TTL_MS = 30_000L   // pick up an edited config without a reinstall
+        private const val LEGACY_FILE = "sms-bridge.json"
 
         val DISABLED = BridgeConfig(false, "", "")
 
         fun load(context: Context): BridgeConfig {
-            val now = System.currentTimeMillis()
-            cached?.let { if (now - cachedAt < TTL_MS) return it }
-
-            val cfg = try {
-                val f = File(context.getExternalFilesDir(null), FILE_NAME)
-                if (!f.exists()) DISABLED else {
-                    val o = JSONObject(f.readText())
-                    BridgeConfig(
-                        enabled = o.optBoolean("enabled", false),
-                        endpoint = o.optString("endpoint", ""),
-                        token = o.optString("token", "")
-                    )
+            return try {
+                val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+                if (listOf(KEY_ENABLED, KEY_ENDPOINT, KEY_TOKEN).none(prefs::contains)) {
+                    importLegacyFile(context, prefs)
                 }
+                BridgeConfig(
+                    enabled = prefs.getBoolean(KEY_ENABLED, false),
+                    endpoint = prefs.getString(KEY_ENDPOINT, "")!!.trim(),
+                    token = prefs.getString(KEY_TOKEN, "")!!.trim()
+                )
             } catch (e: Exception) {
                 // Never let bad config break message receipt. Failing closed is correct here:
                 // the bridge is an add-on, the SMS app is the product.
                 Timber.w(e, "sms-bridge: config unreadable, staying disabled")
                 DISABLED
             }
+        }
 
-            cached = cfg
-            cachedAt = now
-            return cfg
+        private fun importLegacyFile(context: Context, prefs: SharedPreferences) {
+            val f = File(context.getExternalFilesDir(null), LEGACY_FILE)
+            if (!f.exists()) return
+            try {
+                val o = JSONObject(f.readText())
+                prefs.edit()
+                        .putBoolean(KEY_ENABLED, o.optBoolean("enabled", false))
+                        .putString(KEY_ENDPOINT, o.optString("endpoint", ""))
+                        .putString(KEY_TOKEN, o.optString("token", ""))
+                        .apply()
+                f.renameTo(File(f.parentFile, "$LEGACY_FILE.imported"))
+                Timber.i("sms-bridge: imported legacy $LEGACY_FILE into settings")
+            } catch (e: Exception) {
+                // Leave the file in place so the problem is inspectable; stay disabled.
+                Timber.w(e, "sms-bridge: legacy config unreadable, ignoring")
+            }
         }
     }
 }

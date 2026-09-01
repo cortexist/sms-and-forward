@@ -145,6 +145,15 @@ class SettingsPresenter @Inject constructor(
         disposables += prefs.disableScreenshots.asObservable()
             .subscribe { enabled -> newState { copy(disableScreenshotsEnabled = enabled) } }
 
+        disposables += prefs.bridgeEnabled.asObservable()
+            .subscribe { enabled -> newState { copy(bridgeEnabled = enabled) } }
+
+        disposables += prefs.bridgeEndpoint.asObservable()
+            .subscribe { endpoint -> newState { copy(bridgeEndpoint = endpoint) } }
+
+        disposables += prefs.bridgeToken.asObservable()
+            .subscribe { token -> newState { copy(bridgeTokenSet = token.isNotBlank()) } }
+
         disposables += syncRepo.syncProgress
                 .sample(16, TimeUnit.MILLISECONDS)
                 .distinctUntilChanged()
@@ -218,6 +227,12 @@ class SettingsPresenter @Inject constructor(
 
                         R.id.disableScreenshots -> prefs.disableScreenshots.set(!prefs.disableScreenshots.get())
 
+                        R.id.bridgeEnabled -> prefs.bridgeEnabled.set(!prefs.bridgeEnabled.get())
+
+                        R.id.bridgeEndpoint -> view.showBridgeEndpointDialog(prefs.bridgeEndpoint.get())
+
+                        R.id.bridgeToken -> view.showBridgeTokenDialog(prefs.bridgeToken.get())
+
                         R.id.sync -> syncMessages.execute(Unit)
 
                         R.id.about -> view.showAbout()
@@ -275,6 +290,16 @@ class SettingsPresenter @Inject constructor(
 
         view.signatureChanged()
                 .doOnNext(prefs.signature::set)
+                .autoDisposable(view.scope())
+                .subscribe()
+
+        view.bridgeEndpointChanged()
+                .doOnNext { endpoint -> prefs.bridgeEndpoint.set(endpoint.trim()) }
+                .autoDisposable(view.scope())
+                .subscribe()
+
+        view.bridgeTokenChanged()
+                .doOnNext { token -> prefs.bridgeToken.set(token.trim()) }
                 .autoDisposable(view.scope())
                 .subscribe()
 
