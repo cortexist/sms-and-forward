@@ -317,6 +317,7 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
     private fun pushBlocked(url: String, token: String) {
         val addrs = JSONArray()
         val blocked = JSONArray()
+        val pinned = JSONArray()
         val seen = HashSet<String>()
         Realm.getDefaultInstance().use { realm ->
             realm.where(BlockedNumber::class.java).findAll()
@@ -332,8 +333,19 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
                     }
                     blocked.put(JSONObject().put("thread", c.id).put("addrs", convAddrs))
                 }
+            // Pins ride the same push, same complete-state contract as "blocked":
+            // the box mirrors this list and shows those conversations first.
+            realm.where(Conversation::class.java).equalTo("pinned", true).findAll()
+                .forEach { c ->
+                    val convAddrs = JSONArray()
+                    c.recipients.forEach { r ->
+                        if (r.address.isNotBlank()) convAddrs.put(r.address)
+                    }
+                    pinned.put(JSONObject().put("thread", c.id).put("addrs", convAddrs))
+                }
         }
-        val body = JSONObject().put("addrs", addrs).put("blocked", blocked).toString()
+        val body = JSONObject().put("addrs", addrs).put("blocked", blocked)
+            .put("pinned", pinned).toString()
         val req = Request.Builder().url(url)
             .addHeader("Authorization", "Bearer $token")
             .post(body.toRequestBody(JSON)).build()
