@@ -57,7 +57,7 @@ on the receiving side; the Realm primary key provides that.
 | field | notes |
 |---|---|
 | `id` | `"sms:<rowid>"` / `"mms:<rowid>"` — the dedup key |
-| `dir` | `"in"` |
+| `dir` | `"in"`; `"out"` only for a reply in the AGENTS thread (see below) |
 | `ts` | epoch **seconds** of the message timestamp |
 | `addr` | sender address |
 | `body` | text; for MMS, gathered from `text/*` parts when `body` is empty |
@@ -72,3 +72,25 @@ a separate field by the phone.
 Upstream QUIK deliberately ships with this permission commented out and has no network access
 at all. This branch enables it. That is a real change to the app's privacy posture and is the
 reason the forwarder fails closed when unconfigured.
+
+## Agents → human: `notify`, `location`, and the AGENTS thread
+
+Two commands in the queue exist for the box's agents to reach the human.
+
+**`notify {body}`** inserts `body` into the phone's own inbox as a message from `AGENTS` and
+runs the normal receive pipeline, so the notification is the ordinary one — which is what a car
+console (MAP), a watch and Android Auto read. No carrier is involved: it is a content-provider
+write. The inserted message is **not forwarded back** and the backfill skips the thread.
+
+**`AGENTS` is alphanumeric on purpose.** It cannot be a phone number, so a reply typed into that
+thread is never handed to the radio: `MessageRepositoryImpl.sendMessage` marks it sent locally
+and forwards it to the bridge with `dir: "out"`. That is the human → agent channel. The address
+is also exempt from number normalisation, which would otherwise keypad-map the letters to digits.
+
+**`location`** answers in the ack `result`:
+`{"lat", "lon", "acc_m", "ts", "provider", "wifi_ssid", "wifi_bssid", "permission"}`, any field
+null when unknown. Cheapest fix first (wifi access point, then last-known, then one bounded
+request). It needs location permission, granted by hand in the app's settings — **"Allow all the
+time"**, because a WorkManager job is background work on Android 10+ and neither a fix nor the
+wifi BSSID is readable from the background without it. `permission` reports `none`,
+`foreground-only`, `coarse` or `fine` so the box can tell a missing grant from a missing fix.

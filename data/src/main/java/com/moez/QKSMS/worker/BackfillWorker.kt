@@ -34,6 +34,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import dev.octoshrimpy.quik.bridge.AgentChannel
 import dev.octoshrimpy.quik.bridge.BridgeConfig
 import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.Message
@@ -129,7 +130,11 @@ class BackfillWorker(appContext: Context, params: WorkerParameters)
             if (System.currentTimeMillis() > deadline) break
 
             val messages = try {
-                messageRepo.getMessagesSync(threadId).map { m ->
+                // The AGENTS thread is the box's own writing (and the human's replies,
+                // forwarded as they happen); pulling it back would loop it.
+                messageRepo.getMessagesSync(threadId)
+                    .filter { !AgentChannel.isAgent(it.address) }
+                    .map { m ->
                     // Digests and sizes only -- no bytes. Pulling every historic image
                     // is roughly 3 GB here and almost none of it gets looked at; the
                     // desktop asks for the ones it wants through the command queue.

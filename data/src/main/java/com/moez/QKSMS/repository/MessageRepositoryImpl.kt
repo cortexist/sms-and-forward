@@ -23,6 +23,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.ContentUris
 import android.content.Context
+import dev.octoshrimpy.quik.bridge.AgentChannel
+import dev.octoshrimpy.quik.worker.ForwardMessageWorker
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -597,7 +599,10 @@ open class MessageRepositoryImpl @Inject constructor(
         val group = (sendAsGroup && (toAddresses.size > 1))
         val messageUri = QkTransaction.createMessage(
             context, subId, body, prefs.signature.get(),
-            toAddresses.map(phoneNumberUtils::normalizeNumber).toTypedArray(),
+            // AGENTS is a name, not a number; normalising it would keypad-map the
+            // letters to digits and the reply would go to a stranger.
+            toAddresses.map { if (AgentChannel.isAgent(it)) AgentChannel.ADDRESS else phoneNumberUtils.normalizeNumber(it) }
+                .toTypedArray(),
             parts, group, prefs.longAsMms.get(), prefs.unicode.get()
         )
 
@@ -640,6 +645,15 @@ open class MessageRepositoryImpl @Inject constructor(
     }
 
     override fun sendMessage(message: Message): Collection<Message> {
+        // A reply in the agents thread never reaches the radio: AGENTS is not a number.
+        // It is marked sent here and handed to the forwarder as an outbound record,
+        // which is how it gets to the box -- the human -> agent channel.
+        if (AgentChannel.isAgent(message.address)) {
+            markSent(message.id)
+            ForwardMessageWorker.enqueue(context, message.id)
+            return listOf(message)
+        }
+
         val retVal = mutableListOf<Message>()
 
         tryOrNull(true) {

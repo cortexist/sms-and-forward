@@ -172,7 +172,9 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
 
         return JSONObject().apply {
             put("id", "$kind:${message.id}")
-            put("dir", "in")
+            // "out" is only ever a reply in the AGENTS thread, which
+            // MessageRepositoryImpl routes here instead of to the radio.
+            put("dir", if (message.isMe()) "out" else "in")
             put("ts", message.date / 1000)
             put("addr", message.address)
             put("body", body)

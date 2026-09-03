@@ -18,8 +18,9 @@
  * per-install Realm list. To make a message actually go away, the command is delete,
  * which goes through to the system provider.
  *
- * EVERY ATTEMPTED COMMAND IS ACKED, INCLUDING FAILURES, with a result string the
- * desktop displays. Not acking a permanently-broken command (unknown op, malformed
+ * EVERY ATTEMPTED COMMAND IS ACKED, INCLUDING FAILURES, with a result the desktop
+ * displays -- a string, or a JSON object for the commands that are questions
+ * (`location`). Not acking a permanently-broken command (unknown op, malformed
  * args) would retry it forever; acking with an error is honest and lets the operator
  * see it and reissue. Transient failures are therefore surfaced rather than silently
  * retried - a deliberate trade against an unbounded retry loop.
@@ -37,7 +38,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
+import dev.octoshrimpy.quik.bridge.AgentChannel
 import dev.octoshrimpy.quik.bridge.BridgeConfig
+import dev.octoshrimpy.quik.bridge.PhoneLocation
 import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.BlockedNumber
 import dev.octoshrimpy.quik.model.Conversation
@@ -189,7 +193,8 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
             }
             acked.put(id)
             results.put(id, outcome)
-            Timber.v("sms-bridge: $op -> $outcome")
+            // A location answer is not for the log.
+            Timber.v("sms-bridge: $op -> ${if (outcome is JSONObject) "(object)" else outcome}")
         }
 
         return try {
@@ -207,7 +212,7 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
 
     // ------------------------------------------------------------------ apply
 
-    private fun apply(op: String, args: JSONObject): String = when (op) {
+    private fun apply(op: String, args: JSONObject): Any = when (op) {
         "delete_messages" -> {
             val ids = args.longsFromIds("ids")
             messageRepo.deleteMessages(ids)
@@ -293,6 +298,27 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
             }
         }
         "send" -> "unsupported: sending is not implemented over the command queue"
+        // Agent -> human. An inbox insert from AGENTS -- a content-provider write, no
+        // carrier -- then the normal receive pipeline for the notification (which is
+        // what a car console, a watch and Android Auto read), but NOT the forwarder:
+        // the box wrote this, it must not come back to it as new mail. AGENTS is not
+        // dialable, so a reply in that thread goes back to the bridge, not the radio
+        // (see AgentChannel).
+        "notify" -> {
+            val body = args.optString("body")
+            if (body.isBlank()) "refused: empty body" else {
+                val msg = messageRepo.insertReceivedSms(
+                    -1, AgentChannel.ADDRESS, body, System.currentTimeMillis())
+                WorkManager.getInstance(applicationContext).enqueue(
+                    OneTimeWorkRequestBuilder<ReceiveSmsWorker>()
+                        .setInputData(workDataOf(ReceiveSmsWorker.INPUT_DATA_KEY_MESSAGE_ID to msg.id))
+                        .build())
+                JSONObject().put("message", "sms:${msg.id}")
+            }
+        }
+        // Where is the phone? Answered in the ack; the box's perimeter test decides
+        // whether the human needs a text at all. Nulls when permission is missing.
+        "location" -> PhoneLocation.report(applicationContext)
         else -> "unsupported op"
     }
 
