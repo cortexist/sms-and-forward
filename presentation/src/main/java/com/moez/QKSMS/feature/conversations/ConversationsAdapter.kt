@@ -32,6 +32,7 @@ import dev.octoshrimpy.quik.common.base.QkRealmAdapter
 import dev.octoshrimpy.quik.common.util.Colors
 import dev.octoshrimpy.quik.common.util.DateFormatter
 import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
+import dev.octoshrimpy.quik.common.util.extensions.getColorCompat
 import dev.octoshrimpy.quik.common.util.extensions.setTint
 import dev.octoshrimpy.quik.databinding.ConversationListItemBinding
 import dev.octoshrimpy.quik.model.Conversation
@@ -131,6 +132,11 @@ class ConversationsAdapter @Inject constructor(
 
         binding.pinned.isVisible = conversation.pinned
         binding.unread.setTint(theme)
+
+        // A failed last message is a fact about the conversation, not a detail inside it.
+        val failed = lastMessage?.isFailedMessage() == true
+        binding.failed.isVisible = failed
+        if (failed) binding.snippet.setTextColor(context.getColorCompat(R.color.failed))
     }
 
     override fun getItemId(position: Int): Long {

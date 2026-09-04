@@ -88,6 +88,22 @@
         app:layout_constraintTop_toTopOf="@id/snippet"
         tools:visibility="visible" />
 
+    <!-- Last message failed to send: a red badge on the avatar, so the failure is visible
+         from the list rather than only inside the thread. -->
+    <ImageView
+        android:id="@+id/failed"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/failed"
+        android:contentDescription="@string/conversation_failed_cd"
+        android:padding="2dp"
+        android:src="@drawable/ic_failed_badge"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/avatars"
+        app:layout_constraintEnd_toEndOf="@id/avatars"
+        tools:visibility="visible" />
+
     <ImageView
         android:id="@+id/scheduled"
         android:layout_width="20dp"

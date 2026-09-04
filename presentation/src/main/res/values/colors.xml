@@ -52,6 +52,9 @@
     <color name="onThemeLightSecondary">#CCFFFFFF</color>
     <color name="onThemeLightTertiary">#80FFFFFF</color>
 
+    <!-- A failed send: the palette red (Flexoki in light, Tokyo Night in dark). -->
+    <color name="failed">#D14D41</color>
+
     <color name="bubbleLight">#E6E4D9</color>
     <color name="bubbleDark">#24283b</color>
     <color name="bubbleBlack">#0F1113</color>
