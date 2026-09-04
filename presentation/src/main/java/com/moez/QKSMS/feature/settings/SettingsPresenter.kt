@@ -151,8 +151,16 @@ class SettingsPresenter @Inject constructor(
         disposables += prefs.bridgeEndpoint.asObservable()
             .subscribe { endpoint -> newState { copy(bridgeEndpoint = endpoint) } }
 
+        // Enough of the token to recognise it, never enough to use it.
         disposables += prefs.bridgeToken.asObservable()
-            .subscribe { token -> newState { copy(bridgeTokenSet = token.isNotBlank()) } }
+            .subscribe { token -> newState { copy(bridgeTokenHint = when {
+                token.isBlank() -> ""
+                token.length <= 8 -> "\u2022".repeat(token.length)
+                else -> token.take(5) + "\u2026" + token.takeLast(3)
+            }) } }
+
+        disposables += prefs.controlShape.asObservable()
+            .subscribe { shape -> newState { copy(controlShape = shape) } }
 
         disposables += syncRepo.syncProgress
                 .sample(16, TimeUnit.MILLISECONDS)
@@ -233,6 +241,9 @@ class SettingsPresenter @Inject constructor(
 
                         R.id.bridgeToken -> view.showBridgeTokenDialog(prefs.bridgeToken.get())
 
+                        // Tapping the row itself steps to the next shape; the widget's outlines pick directly.
+                        R.id.controlShape -> prefs.controlShape.set((prefs.controlShape.get() + 1) % 4)
+
                         R.id.sync -> syncMessages.execute(Unit)
 
                         R.id.about -> view.showAbout()
@@ -300,6 +311,11 @@ class SettingsPresenter @Inject constructor(
 
         view.bridgeTokenChanged()
                 .doOnNext { token -> prefs.bridgeToken.set(token.trim()) }
+                .autoDisposable(view.scope())
+                .subscribe()
+
+        view.controlShapeSelected()
+                .doOnNext(prefs.controlShape::set)
                 .autoDisposable(view.scope())
                 .subscribe()
 

@@ -53,6 +53,7 @@ data class SettingsState(
     val disableScreenshotsEnabled: Boolean = false,
     val bridgeEnabled: Boolean = false,
     val bridgeEndpoint: String = "",
-    val bridgeTokenSet: Boolean = false,
+    val bridgeTokenHint: String = "",   // first and last characters of the token, or blank
+    val controlShape: Int = Preferences.SHAPE_SQUARE,
     val syncProgress: SyncRepository.SyncProgress = SyncRepository.SyncProgress.Idle
 )

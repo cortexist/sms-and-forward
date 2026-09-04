@@ -25,6 +25,8 @@ import android.os.Build
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
+import android.content.res.ColorStateList
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import com.bluelinelabs.conductor.RouterTransaction
@@ -56,6 +58,12 @@ import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import javax.inject.Inject
+
+private val SHAPE_ICONS = listOf(   // [outline, filled] per Preferences.SHAPE_* index
+    listOf(R.drawable.ic_shape_square, R.drawable.ic_shape_square_filled),
+    listOf(R.drawable.ic_shape_rounded, R.drawable.ic_shape_rounded_filled),
+    listOf(R.drawable.ic_shape_round, R.drawable.ic_shape_round_filled),
+    listOf(R.drawable.ic_shape_squircle, R.drawable.ic_shape_squircle_filled))
 
 class SettingsController : QkController<SettingsControllerBinding, SettingsView, SettingsState, SettingsPresenter>(), SettingsView {
 
@@ -90,6 +98,7 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     private val signatureSubject: Subject<String> = PublishSubject.create()
     private val bridgeEndpointSubject: Subject<String> = PublishSubject.create()
     private val bridgeTokenSubject: Subject<String> = PublishSubject.create()
+    private val controlShapeSubject: Subject<Int> = PublishSubject.create()
 
     private val progressAnimator by lazy { ObjectAnimator.ofInt(binding.syncingProgress, "progress", 0, 0) }
 
@@ -104,6 +113,8 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
 
     override fun onViewCreated() {
         binding.preferences.postDelayed({ binding.preferences.animateLayoutChanges = true }, 100)
+
+        shapeViews().forEachIndexed { shape, view -> view.setOnClickListener { controlShapeSubject.onNext(shape) } }
 
         when (Build.VERSION.SDK_INT >= 29) {
             true -> nightModeDialog.adapter.setData(R.array.night_modes)
@@ -151,6 +162,8 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun bridgeEndpointChanged(): Observable<String> = bridgeEndpointSubject
 
     override fun bridgeTokenChanged(): Observable<String> = bridgeTokenSubject
+
+    override fun controlShapeSelected(): Observable<Int> = controlShapeSubject
 
     override fun mmsSizeSelected(): Observable<Int> = mmsSizeDialog.adapter.menuItemClicks
 
@@ -205,10 +218,13 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
         binding.bridgeEnabled.checkbox?.isChecked = state.bridgeEnabled
         binding.bridgeEndpoint.summary = state.bridgeEndpoint.takeIf { it.isNotBlank() }
                 ?: context.getString(R.string.settings_bridge_endpoint_summary)
-        binding.bridgeToken.summary = context.getString(when (state.bridgeTokenSet) {
-            true -> R.string.settings_bridge_token_set
-            false -> R.string.settings_bridge_token_unset
-        })
+        binding.bridgeToken.summary = state.bridgeTokenHint.ifBlank { context.getString(R.string.settings_bridge_token_unset) }
+
+        // Four outlines in the theme colour; the chosen one is filled.
+        shapeViews().forEachIndexed { shape, view ->
+            view.setImageResource(SHAPE_ICONS[shape][if (shape == state.controlShape) 1 else 0])
+            view.imageTintList = ColorStateList.valueOf(state.theme)
+        }
 
         when (state.syncProgress) {
             is SyncRepository.SyncProgress.Idle -> binding.syncingProgress.isVisible = false
@@ -263,6 +279,9 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun showBridgeEndpointDialog(endpoint: String) = bridgeEndpointDialog.setText(endpoint).show()
 
     override fun showBridgeTokenDialog(token: String) = bridgeTokenDialog.setText(token).show()
+
+    private fun shapeViews(): List<ImageView> = listOf(R.id.shapeSquare, R.id.shapeRounded, R.id.shapeRound, R.id.shapeSquircle)
+            .map { id -> binding.controlShape.findViewById<ImageView>(id) }
 
     override fun showMmsSizePicker() = mmsSizeDialog.show(activity!!)
 

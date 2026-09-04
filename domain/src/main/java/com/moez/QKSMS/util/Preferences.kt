@@ -49,6 +49,11 @@ class Preferences @Inject constructor(
         const val TEXT_SIZE_LARGER = 3
         const val TEXT_SIZE_SUPER = 4
 
+        const val SHAPE_SQUARE = 0
+        const val SHAPE_ROUNDED = 1
+        const val SHAPE_ROUND = 2
+        const val SHAPE_SQUIRCLE = 3
+
         const val NOTIFICATION_PREVIEWS_ALL = 0
         const val NOTIFICATION_PREVIEWS_NAME = 1
         const val NOTIFICATION_PREVIEWS_NONE = 2
@@ -108,6 +113,9 @@ class Preferences @Inject constructor(
     val black = rxPrefs.getBoolean("black", false)
     val autoColor = rxPrefs.getBoolean("autoColor", true)
     val systemFont = rxPrefs.getBoolean("systemFont", false)
+    // Avatars and round buttons. Square is the Omarchy look; the others let the app follow
+    // whatever shape the launcher gives its icons, which the app has no way to ask for.
+    val controlShape = rxPrefs.getInteger("controlShape", SHAPE_SQUARE)
     val showStt = rxPrefs.getBoolean("showStt", true)
     val showSttOffsetX = rxPrefs.getFloat("showSttOffsetX", Float.MIN_VALUE)
     val showSttOffsetY = rxPrefs.getFloat("showSttOffsetY", Float.MIN_VALUE)

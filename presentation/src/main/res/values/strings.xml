@@ -264,6 +264,8 @@
     <string name="settings_category_qkreply">QK Reply</string>
 
     <string name="settings_theme_title">Theme</string>
+    <string name="settings_shape_title">Control shape</string>
+    <string name="settings_shape_summary">Avatars and buttons: square by default, or match your launcher\'s icons</string>
     <string name="settings_night_title">Night mode</string>
     <string name="settings_black_title">Pure black night mode</string>
     <string name="settings_night_start_title">Start time</string>
@@ -339,7 +341,6 @@
     <string name="settings_bridge_endpoint_title">Bridge endpoint</string>
     <string name="settings_bridge_endpoint_summary">Not set</string>
     <string name="settings_bridge_token_title">Bridge token</string>
-    <string name="settings_bridge_token_set">Set</string>
     <string name="settings_bridge_token_unset">Not set</string>
     <string name="settings_sync_title">Sync messages</string>
     <string name="settings_sync_summary">Re-sync your messages with the native Android SMS database</string>

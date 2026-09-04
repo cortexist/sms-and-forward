@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        minSdk 23
+        minSdk 24
         targetSdkVersion 33
     }
     namespace 'dev.octoshrimpy.quik.domain'

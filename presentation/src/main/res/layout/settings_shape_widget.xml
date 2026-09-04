@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Four outlines, theme-tinted, the chosen one filled: square, rounded, round, squircle. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
+
+    <ImageView
+        android:id="@+id/shapeSquare"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Square"
+        android:padding="6dp"
+        android:src="@drawable/ic_shape_square" />
+
+    <ImageView
+        android:id="@+id/shapeRounded"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Rounded square"
+        android:padding="6dp"
+        android:src="@drawable/ic_shape_rounded" />
+
+    <ImageView
+        android:id="@+id/shapeRound"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Round"
+        android:padding="6dp"
+        android:src="@drawable/ic_shape_round" />
+
+    <ImageView
+        android:id="@+id/shapeSquircle"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Squircle"
+        android:padding="6dp"
+        android:src="@drawable/ic_shape_squircle" />
+
+</LinearLayout>

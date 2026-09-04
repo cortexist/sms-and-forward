@@ -50,8 +50,8 @@
     <color name="separatorLight">#B7B5AC</color>
     <color name="separatorDark">#414868</color>
 
-    <color name="switchThumbEnabledLight">#205EA6</color>
-    <color name="switchThumbEnabledDark">#7aa2f7</color>
+    <color name="switchThumbEnabledLight">#E6E4D9</color>
+    <color name="switchThumbEnabledDark">#a9b1d6</color>
 
     <color name="switchTrackEnabledLight">#B7B5AC</color>
     <color name="switchTrackEnabledDark">#414868</color>
