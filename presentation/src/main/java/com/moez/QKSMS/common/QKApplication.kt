@@ -53,6 +53,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import dev.octoshrimpy.quik.common.widget.ControlShapeDrawable
+import dev.octoshrimpy.quik.util.Preferences
 
 class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverInjector, HasServiceInjector {
 
@@ -68,6 +70,7 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
     @Inject lateinit var dispatchingServiceInjector: DispatchingAndroidInjector<Service>
     @Inject lateinit var fileLoggingTree: FileLoggingTree
     @Inject lateinit var nightModeManager: NightModeManager
+    @Inject lateinit var prefs: Preferences
     @Inject lateinit var realmMigration: QkRealmMigration
     @Inject lateinit var referralManager: ReferralManager
     @Inject lateinit var workerFactory: WorkerFactory
@@ -97,6 +100,10 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
         }
 
         nightModeManager.updateCurrentTheme()
+
+        // ControlShapeDrawable is built by the resource system without a Context, so it reads
+        // a static; keep that static equal to the preference for the life of the process.
+        prefs.controlShape.asObservable().subscribe { shape -> ControlShapeDrawable.shape = shape }
 
         // configure timber logging
         Timber.plant(Timber.DebugTree(), fileLoggingTree)
