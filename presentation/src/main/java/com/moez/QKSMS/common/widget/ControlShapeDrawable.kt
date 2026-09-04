@@ -29,6 +29,7 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.view.View
 import dev.octoshrimpy.quik.util.Preferences
 import java.util.Collections
 import java.util.WeakHashMap
@@ -53,7 +54,7 @@ class ControlShapeDrawable : Drawable() {
             set(value) {
                 if (field == value) return
                 field = value
-                synchronized(live) { live.toList() }.forEach { it.invalidateSelf() }
+                synchronized(live) { live.toList() }.forEach { it.shapeChanged() }
             }
 
         private const val ROUNDED_RADIUS = 0.22f   // of the shorter side
@@ -104,6 +105,14 @@ class ControlShapeDrawable : Drawable() {
     private fun rebuild() {
         builtShape = shape
         build(builtShape, bounds, path)
+    }
+
+    /** Rebuild now and refresh the owner's cached outline: a view that clips to its
+     *  outline (photo avatars) would otherwise keep the old shape until re-laid out. */
+    private fun shapeChanged() {
+        rebuild()
+        (callback as? View)?.invalidateOutline()
+        invalidateSelf()
     }
 
     override fun draw(canvas: Canvas) {
