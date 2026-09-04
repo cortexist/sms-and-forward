@@ -890,6 +890,9 @@ open class MessageRepositoryImpl @Inject constructor(
                                 null,
                                 null
                             )
+                            // The bridge already holds this message from the send; a second
+                            // forward carries status=failed so the desktop can show it.
+                            ForwardMessageWorker.enqueue(context, message.id)
                             true
                         } else false
                     } else {  // mms

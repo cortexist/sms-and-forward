@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The paperclip at -45 degrees. Rotating the drawable rather than the ImageView keeps the
+     button's background shape upright like the other five in the attachment fan. -->
+<rotate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_attachment_black_24dp"
+    android:fromDegrees="-45"
+    android:pivotX="50%"
+    android:pivotY="50%"
+    android:toDegrees="-45" />

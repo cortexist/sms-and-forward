@@ -108,6 +108,14 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
         // configure timber logging
         Timber.plant(Timber.DebugTree(), fileLoggingTree)
 
+        // A crash otherwise leaves no trace in the exported log, which is the only log
+        // reachable without adb; write the stack there first, then let the system have it.
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            Timber.e(throwable, "uncaught on ${thread.name}")
+            previous?.uncaughtException(thread, throwable)
+        }
+
         // configure emoji compatibility with bundled package
         // (bundled library works with no play-services/gsm os versions)
         EmojiCompat.init(BundledEmojiCompatConfig(this)

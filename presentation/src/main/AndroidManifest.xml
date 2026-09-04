@@ -35,6 +35,7 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Used for starting foreground service for backup/restore on Android P+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- sms-bridge: QUIK ships with no network access by design, and this line was
          deliberately commented out upstream. It is enabled here ONLY to forward received
          messages to the user's own box over Tailscale. The forwarder is inert unless
@@ -227,6 +228,12 @@
         <service
             android:name=".feature.widget.WidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <!-- sms-bridge live link: long-polls the box while the human is at the desk (LiveLink). -->
+        <service
+            android:name=".service.LiveBridgeService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <service
             android:name=".service.AutoDeleteService"

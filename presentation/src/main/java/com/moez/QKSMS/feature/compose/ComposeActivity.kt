@@ -208,17 +208,17 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                     // entire attach menu
                     binding.attach.setBackgroundTint(it.theme); binding.attach.setTint(it.textPrimary)
                     binding.contact.setBackgroundTint(it.theme); binding.contact.setTint(it.textPrimary)
-                    binding.contactLabel.setBackgroundTint(it.theme); binding.contactLabel.setTint(it.textPrimary)
+                    binding.contactLabel.setBackgroundTint(it.theme); binding.contactLabel.setTextColor(it.textPrimary)
                     binding.schedule.setBackgroundTint(it.theme); binding.schedule.setTint(it.textPrimary)
-                    binding.scheduleLabel.setBackgroundTint(it.theme); binding.scheduleLabel.setTint(it.textPrimary)
+                    binding.scheduleLabel.setBackgroundTint(it.theme); binding.scheduleLabel.setTextColor(it.textPrimary)
                     binding.attachAFileIcon.setBackgroundTint(it.theme); binding.attachAFileIcon.setTint(it.textPrimary)
-                    binding.attachAFileLabel.setBackgroundTint(it.theme); binding.attachAFileLabel.setTint(it.textPrimary)
+                    binding.attachAFileLabel.setBackgroundTint(it.theme); binding.attachAFileLabel.setTextColor(it.textPrimary)
                     binding.attachAnAudioMessageIcon.setBackgroundTint(it.theme); binding.attachAnAudioMessageIcon.setTint(it.textPrimary)
-                    binding.attachAnAudioMessageLabel.setBackgroundTint(it.theme); binding.attachAnAudioMessageLabel.setTint(it.textPrimary)
+                    binding.attachAnAudioMessageLabel.setBackgroundTint(it.theme); binding.attachAnAudioMessageLabel.setTextColor(it.textPrimary)
                     binding.gallery.setBackgroundTint(it.theme); binding.gallery.setTint(it.textPrimary)
-                    binding.galleryLabel.setBackgroundTint(it.theme); binding.galleryLabel.setTint(it.textPrimary)
+                    binding.galleryLabel.setBackgroundTint(it.theme); binding.galleryLabel.setTextColor(it.textPrimary)
                     binding.camera.setBackgroundTint(it.theme); binding.camera.setTint(it.textPrimary)
-                    binding.cameraLabel.setBackgroundTint(it.theme); binding.cameraLabel.setTint(it.textPrimary)
+                    binding.cameraLabel.setBackgroundTint(it.theme); binding.cameraLabel.setTextColor(it.textPrimary)
 
                     // speech to text floating button
                     binding.speechToTextIconBorder.setBackgroundTint(it.theme)

@@ -23,6 +23,7 @@ import dagger.android.ContributesAndroidInjector
 import dev.octoshrimpy.quik.feature.backup.RestoreBackupService
 import dev.octoshrimpy.quik.injection.scope.ActivityScope
 import dev.octoshrimpy.quik.service.HeadlessSmsSendService
+import dev.octoshrimpy.quik.service.LiveBridgeService
 import dev.octoshrimpy.quik.service.AutoDeleteService
 
 @Module
@@ -39,5 +40,9 @@ abstract class ServiceBuilderModule {
     @ActivityScope
     @ContributesAndroidInjector
     abstract fun bindRestoreBackupService(): RestoreBackupService
+
+    @ActivityScope
+    @ContributesAndroidInjector
+    abstract fun bindLiveBridgeService(): LiveBridgeService
 
 }

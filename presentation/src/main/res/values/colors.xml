@@ -43,6 +43,15 @@
     <color name="textSecondaryDisabledDark">#67a9b1d6</color>
     <color name="textTertiaryDark">#565f89</color>
 
+    <!-- Text drawn ON the accent colour (bubbles, avatars, the attachment fan). Colors.kt picks the
+         candidate with the higher WCAG contrast against the accent: near-black or white. -->
+    <color name="onThemeDarkPrimary">#100F0F</color>
+    <color name="onThemeDarkSecondary">#B3100F0F</color>
+    <color name="onThemeDarkTertiary">#80100F0F</color>
+    <color name="onThemeLightPrimary">#FFFFFF</color>
+    <color name="onThemeLightSecondary">#CCFFFFFF</color>
+    <color name="onThemeLightTertiary">#80FFFFFF</color>
+
     <color name="bubbleLight">#E6E4D9</color>
     <color name="bubbleDark">#24283b</color>
     <color name="bubbleBlack">#0F1113</color>

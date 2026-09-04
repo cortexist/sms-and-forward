@@ -175,6 +175,12 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
             // "out" is only ever a reply in the AGENTS thread, which
             // MessageRepositoryImpl routes here instead of to the radio.
             put("dir", if (message.isMe()) "out" else "in")
+            // Outbound only: the bridge updates an already-stored id when a status arrives.
+            if (message.isMe()) put("status", when (message.boxId) {
+                android.provider.Telephony.Sms.MESSAGE_TYPE_FAILED -> "failed"
+                android.provider.Telephony.Sms.MESSAGE_TYPE_SENT -> "sent"
+                else -> "queued"
+            })
             put("ts", message.date / 1000)
             put("addr", message.address)
             put("body", body)

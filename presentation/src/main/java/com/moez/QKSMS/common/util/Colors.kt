@@ -72,12 +72,9 @@ class Colors @Inject constructor(
     private val randomColors: List<Int> = context.resources.obtainTypedArray(R.array.random_colors)
             .let { typedArray -> (0 until typedArray.length()).map(typedArray::getColorOrThrow) }
 
-    private val minimumContrastRatio = 2
-
-    // Cache these values so they don't need to be recalculated
-    private val primaryTextLuminance = measureLuminance(context.getColorCompat(R.color.textPrimaryDark))
-    private val secondaryTextLuminance = measureLuminance(context.getColorCompat(R.color.textSecondaryDark))
-    private val tertiaryTextLuminance = measureLuminance(context.getColorCompat(R.color.textTertiaryDark))
+    // Relative luminance (+0.05, the WCAG contrast offset) of the two text candidates.
+    private val darkTextLuminance = measureLuminance(context.getColorCompat(R.color.onThemeDarkPrimary))
+    private val lightTextLuminance = measureLuminance(context.getColorCompat(R.color.onThemeLightPrimary))
 
     fun theme(recipient: Recipient? = null): Theme {
         val pref = prefs.theme(recipient?.id ?: 0)
@@ -103,33 +100,32 @@ class Colors @Inject constructor(
             .let { hsv -> hsv.apply { set(2, 0.75f) } } // 75% value
             .let { hsv -> Color.HSVToColor(85, hsv) } // 33% alpha
 
-    fun textPrimaryOnThemeForColor(color: Int): Int = color
-            .let { theme -> measureLuminance(theme) }
-            .let { themeLuminance -> primaryTextLuminance / themeLuminance }
-            .let { contrastRatio -> contrastRatio < minimumContrastRatio }
-            .let { contrastRatio -> if (contrastRatio) R.color.textPrimary else R.color.textPrimaryDark }
-            .let { res -> context.getColorCompat(res) }
+    /** True when near-black text reads better than white on this colour (WCAG contrast ratio). */
+    private fun prefersDarkText(color: Int): Boolean {
+        val bg = measureLuminance(color)
+        val darkRatio = maxOf(bg, darkTextLuminance) / minOf(bg, darkTextLuminance)
+        val lightRatio = maxOf(bg, lightTextLuminance) / minOf(bg, lightTextLuminance)
+        return darkRatio >= lightRatio
+    }
 
-    fun textSecondaryOnThemeForColor(color: Int): Int = color
-            .let { theme -> measureLuminance(theme) }
-            .let { themeLuminance -> secondaryTextLuminance / themeLuminance }
-            .let { contrastRatio -> contrastRatio < minimumContrastRatio }
-            .let { contrastRatio -> if (contrastRatio) R.color.textSecondary else R.color.textSecondaryDark }
-            .let { res -> context.getColorCompat(res) }
+    fun textPrimaryOnThemeForColor(color: Int): Int = context.getColorCompat(
+            if (prefersDarkText(color)) R.color.onThemeDarkPrimary else R.color.onThemeLightPrimary)
 
-    fun textTertiaryOnThemeForColor(color: Int): Int = color
-            .let { theme -> measureLuminance(theme) }
-            .let { themeLuminance -> tertiaryTextLuminance / themeLuminance }
-            .let { contrastRatio -> contrastRatio < minimumContrastRatio }
-            .let { contrastRatio -> if (contrastRatio) R.color.textTertiary else R.color.textTertiaryDark }
-            .let { res -> context.getColorCompat(res) }
+    fun textSecondaryOnThemeForColor(color: Int): Int = context.getColorCompat(
+            if (prefersDarkText(color)) R.color.onThemeDarkSecondary else R.color.onThemeLightSecondary)
+
+    fun textTertiaryOnThemeForColor(color: Int): Int = context.getColorCompat(
+            if (prefersDarkText(color)) R.color.onThemeDarkTertiary else R.color.onThemeLightTertiary)
 
     /**
      * Measures the luminance value of a color to be able to measure the contrast ratio between two materialColors
      * Based on https://stackoverflow.com/a/9733420
      */
     private fun measureLuminance(color: Int): Double {
+        // sRGB channels to linear light; the 0..255 to 0..1 step was missing before, which made
+        // every channel "bright" and the ratio meaningless for pastel accents.
         val array = intArrayOf(Color.red(color), Color.green(color), Color.blue(color))
+                .map { it / 255.0 }
                 .map { if (it < 0.03928) it / 12.92 else ((it + 0.055) / 1.055).pow(2.4) }
 
         return 0.2126 * array[0] + 0.7152 * array[1] + 0.0722 * array[2] + 0.05

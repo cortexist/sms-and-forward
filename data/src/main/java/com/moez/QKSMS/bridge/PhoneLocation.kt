@@ -72,6 +72,13 @@ object PhoneLocation {
         return out
     }
 
+    /** The BSSID the phone is on, lowercase, or null when unknown or not permitted. */
+    fun wifiBssid(context: Context): String? = try {
+        JSONObject().also { wifi(context, it) }.let { if (it.isNull("wifi_bssid")) null else it.optString("wifi_bssid") }
+    } catch (e: Exception) {
+        null
+    }
+
     private fun granted(context: Context, permission: String) =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 

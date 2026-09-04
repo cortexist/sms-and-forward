@@ -38,11 +38,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import androidx.work.workDataOf
-import dev.octoshrimpy.quik.bridge.AgentChannel
 import dev.octoshrimpy.quik.bridge.BridgeConfig
-import dev.octoshrimpy.quik.bridge.PhoneLocation
-import dev.octoshrimpy.quik.bridge.PartUploader
+import dev.octoshrimpy.quik.bridge.CommandApplier
+import dev.octoshrimpy.quik.bridge.LiveLink
+import dev.octoshrimpy.quik.service.LiveBridgeService
 import dev.octoshrimpy.quik.model.BlockedNumber
 import dev.octoshrimpy.quik.model.Conversation
 import dev.octoshrimpy.quik.repository.ConversationRepository
@@ -156,6 +155,9 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
         endpointBase = base
         authToken = config.token
 
+        // While the live link holds the queue, this drain would apply the same commands twice.
+        if (LiveBridgeService.running) return Result.success()
+
         // Report what is blocked here before draining. QUIK's block is app-local and
         // reversible -- a quarantine in all but name -- so marking junk on the phone
         // needs no new UI, it just has to reach the desktop. Best effort: a failure
@@ -166,14 +168,18 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
             Timber.v("sms-bridge: block list not pushed (${e.javaClass.simpleName})")
         }
 
-        val commands = try {
+        val fetched = try {
             fetch("$base/commands", config.token)
         } catch (e: IOException) {
             // Expected while the box is resetting or the phone is off-tailnet.
             return if (runAttemptCount >= MAX_ATTEMPTS) Result.failure() else Result.retry()
         } ?: return Result.failure()
 
-        if (commands.length() == 0) return Result.success()
+        val commands = fetched.optJSONArray("commands") ?: JSONArray()
+        if (commands.length() == 0) {
+            startLiveLinkIfWanted(fetched.optJSONObject("live"))
+            return Result.success()
+        }
 
         val take = minOf(commands.length(), PER_RUN)
         val more = commands.length() > take
@@ -187,9 +193,11 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
             val op = cmd.optString("op")
             val outcome = try {
                 apply(op, cmd.optJSONObject("args") ?: JSONObject())
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                // Throwable, not Exception: a NoClassDefFoundError or VerifyError from one
+                // command must be acked as an error, not kill the process with the batch unacked.
                 Timber.w(e, "sms-bridge: command $op failed")
-                "error: ${e.javaClass.simpleName}"
+                "error: ${e.javaClass.simpleName}: ${e.message}"
             }
             acked.put(id)
             results.put(id, outcome)
@@ -201,6 +209,7 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
             ack("$base/commands/ack", config.token, acked, results)
             // Come straight back for the rest rather than waiting for the next poll.
             if (more) enqueue(applicationContext)
+            startLiveLinkIfWanted(fetched.optJSONObject("live"))
             Result.success()
         } catch (e: IOException) {
             // The work was done but the ack did not land. Retrying is safe: applying
@@ -210,117 +219,33 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
         }
     }
 
+    /** After the batch is applied and acked -- never before, so a failing service cannot
+     *  leave commands stuck -- hand the queue to the live link if the box wants one and
+     *  we are on its LAN. Android 12+ may refuse a foreground service started from the
+     *  background; that is recorded for live_status and the queue keeps polling. */
+    private fun startLiveLinkIfWanted(live: JSONObject?) {
+        val wanted = try {
+            LiveLink.shouldRun(applicationContext, live)
+        } catch (e: Throwable) {
+            Timber.w(e, "sms-bridge: live link decision failed (${e.javaClass.simpleName})")
+            return
+        }
+        if (!wanted) return
+        try {
+            LiveBridgeService.start(applicationContext)
+            LiveLink.note(applicationContext, "error", null)
+            Timber.v("sms-bridge: live link requested")
+        } catch (e: Throwable) {
+            LiveLink.note(applicationContext, "error", "${e.javaClass.simpleName}: ${e.message}")
+            Timber.w(e, "sms-bridge: live link could not start (${e.javaClass.simpleName})")
+        }
+    }
+
     // ------------------------------------------------------------------ apply
 
-    private fun apply(op: String, args: JSONObject): Any = when (op) {
-        "delete_messages" -> {
-            val ids = args.longsFromIds("ids")
-            messageRepo.deleteMessages(ids)
-            "deleted ${ids.size}"
-        }
-        "delete_conversations" -> {
-            // Addressable either way. getConversation (not getOrCreate) on purpose:
-            // deleting a conversation must never create one as a side effect.
-            val byId = args.longs("threads")
-            val byAddr = args.strings("addrs").mapNotNull {
-                conversationRepo.getConversation(listOf(it))?.id
-            }
-            val t = (byId + byAddr).distinct()
-            if (t.isEmpty()) "no matching conversation" else {
-                conversationRepo.deleteConversations(*t.toLongArray())
-                "deleted ${t.size} conversation(s)"
-            }
-        }
-        // FIFO trim. Evaluated here because only the phone holds the complete chain;
-        // the desktop's archive starts wherever forwarding started, so it cannot know
-        // which messages are genuinely the oldest.
-        "delete_old_messages" -> {
-            val days = args.optInt("days", 0)
-            if (days <= 0) "refused: days must be > 0" else {
-                messageRepo.deleteOldMessages(days)
-                "deleted messages older than $days day(s)"
-            }
-        }
-        "mark_read" -> "marked ${messageRepo.markRead(args.longs("threads"))} read"
-        "mark_unread" -> "marked ${messageRepo.markUnread(args.longs("threads"))} unread"
-        "mark_archived" -> {
-            val t = args.longs("threads")
-            conversationRepo.markArchived(*t.toLongArray())
-            "archived ${t.size}"
-        }
-        // Asymmetric on purpose: markUnarchived takes a Collection, markArchived a vararg.
-        "mark_unarchived" -> {
-            val t = args.longs("threads")
-            conversationRepo.markUnarchived(t)
-            "unarchived ${t.size}"
-        }
-        "mark_blocked" -> {
-            val t = args.longs("threads")
-            conversationRepo.markBlocked(t, prefs.blockingManager.get(), args.optNullString("reason"))
-            "blocked ${t.size} (app-local)"
-        }
-        "mark_unblocked" -> {
-            val t = args.longs("threads")
-            conversationRepo.markUnblocked(*t.toLongArray())
-            "unblocked ${t.size}"
-        }
-        "mark_pinned" -> {
-            val t = args.longs("threads")
-            conversationRepo.markPinned(*t.toLongArray())
-            "pinned ${t.size}"
-        }
-        "mark_unpinned" -> {
-            val t = args.longs("threads")
-            conversationRepo.markUnpinned(*t.toLongArray())
-            "unpinned ${t.size}"
-        }
-        // Sending needs a subscription, a thread and the send pipeline; it is also the
-        // one verb where poll latency is unacceptable, so it is not wired to this path.
-        // Kicked off here rather than run inline: a full sweep takes many minutes and
-        // several worker lifetimes, so the command only starts it and returns.
-        "backfill" -> {
-            if (args.optBoolean("reset", false)) BackfillWorker.reset(applicationContext)
-            BackfillWorker.enqueue(applicationContext)
-            "backfill started"
-        }
-        // Fetch one image the desktop has chosen to look at. Backfill records
-        // digests without bytes, so this is how a historic picture is retrieved --
-        // seconds for the one that is wanted, instead of gigabytes for all of them.
-        "fetch_attachment" -> {
-            val sha = args.optString("sha")
-            val mid = args.optString("message").substringAfterLast(':').toLongOrNull()
-            val msg = if (mid != null) messageRepo.getMessage(mid) else null
-            when {
-                sha.isBlank() || msg == null -> "no such message"
-                PartUploader.sendOne(applicationContext, msg, sha,
-                                     baseOf(), tokenOf(), client) -> "sent $sha"
-                else -> "digest not found in that message"
-            }
-        }
-        "send" -> "unsupported: sending is not implemented over the command queue"
-        // Agent -> human. An inbox insert from AGENTS -- a content-provider write, no
-        // carrier -- then the normal receive pipeline for the notification (which is
-        // what a car console, a watch and Android Auto read), but NOT the forwarder:
-        // the box wrote this, it must not come back to it as new mail. AGENTS is not
-        // dialable, so a reply in that thread goes back to the bridge, not the radio
-        // (see AgentChannel).
-        "notify" -> {
-            val body = args.optString("body")
-            if (body.isBlank()) "refused: empty body" else {
-                val msg = messageRepo.insertReceivedSms(
-                    -1, AgentChannel.ADDRESS, body, System.currentTimeMillis())
-                WorkManager.getInstance(applicationContext).enqueue(
-                    OneTimeWorkRequestBuilder<ReceiveSmsWorker>()
-                        .setInputData(workDataOf(ReceiveSmsWorker.INPUT_DATA_KEY_MESSAGE_ID to msg.id))
-                        .build())
-                JSONObject().put("message", "sms:${msg.id}")
-            }
-        }
-        // Where is the phone? Answered in the ack; the box's perimeter test decides
-        // whether the human needs a text at all. Nulls when permission is missing.
-        "location" -> PhoneLocation.report(applicationContext)
-        else -> "unsupported op"
-    }
+    private val applier by lazy { CommandApplier(applicationContext, messageRepo, conversationRepo, prefs) }
+
+    private fun apply(op: String, args: JSONObject): Any = applier.apply(op, args, baseOf(), tokenOf(), client)
 
     // ------------------------------------------------------------------- http
 
@@ -380,7 +305,7 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
         }
     }
 
-    private fun fetch(url: String, token: String): JSONArray? {
+    private fun fetch(url: String, token: String): JSONObject? {
         val req = Request.Builder().url(url)
             .addHeader("Authorization", "Bearer $token").get().build()
         client.newCall(req).execute().use { r ->
@@ -388,8 +313,7 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
                 Timber.w("sms-bridge: GET commands -> http ${r.code}")
                 return null
             }
-            val body = r.body?.string().orEmpty()
-            return JSONObject(body).optJSONArray("commands") ?: JSONArray()
+            return JSONObject(r.body?.string().orEmpty())
         }
     }
 
@@ -404,30 +328,3 @@ class CommandWorker(appContext: Context, params: WorkerParameters)
     }
 }
 
-// The desktop identifies messages as "sms:<rowid>" / "mms:<rowid>" -- the same stable
-// id the forwarder sends, which is the Realm primary key, so it round-trips exactly.
-private fun JSONObject.longsFromIds(key: String): List<Long> {
-    val a = optJSONArray(key) ?: return emptyList()
-    return (0 until a.length()).mapNotNull {
-        a.optString(it).substringAfterLast(':').toLongOrNull()
-    }
-}
-
-private fun JSONObject.longs(key: String): List<Long> {
-    val a = optJSONArray(key) ?: return emptyList()
-    return (0 until a.length()).mapNotNull {
-        when (val v = a.opt(it)) {
-            is Number -> v.toLong()
-            is String -> v.toLongOrNull()
-            else -> null
-        }
-    }
-}
-
-private fun JSONObject.strings(key: String): List<String> {
-    val a = optJSONArray(key) ?: return emptyList()
-    return (0 until a.length()).map { a.optString(it) }.filter { it.isNotBlank() }
-}
-
-private fun JSONObject.optNullString(key: String): String? =
-    if (isNull(key)) null else optString(key).ifBlank { null }
