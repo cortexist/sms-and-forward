@@ -97,7 +97,7 @@
             android:layout_margin="16dp"
             android:background="@drawable/circle_ripple"
             android:contentDescription="@string/main_fab_cd"
-            android:elevation="8dp"
+            android:elevation="0dp"
             android:padding="16dp"
             android:src="@drawable/ic_add_black_24dp"
             app:layout_constraintBottom_toTopOf="@id/bottom"

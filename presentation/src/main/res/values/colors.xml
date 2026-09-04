@@ -21,60 +21,88 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
 
-    <color name="rippleLight">#1f000000</color>
-    <color name="rippleDark">#33ffffff</color>
+    <color name="rippleLight">#1f100F0F</color>
+    <color name="rippleDark">#33c0caf5</color>
 
-    <color name="toolbarLight">#FFFFFF</color>
-    <color name="toolbarDark">#1d262b</color>
+    <color name="toolbarLight">#f2efe4</color>
+    <color name="toolbarDark">#13141c</color>
     <color name="toolbarTranslucent">#88000000</color>
 
-    <color name="backgroundLight">#FFFFFF</color>
-    <color name="backgroundDark">#192025</color>
+    <color name="backgroundLight">#FFFCF0</color>
+    <color name="backgroundDark">#1a1b26</color>
 
-    <color name="textPrimary">#49555F</color>
-    <color name="textPrimaryDisabled">#4C49555F</color>
-    <color name="textSecondary">#70808D</color>
-    <color name="textSecondaryDisabled">#4C70808D</color>
-    <color name="textTertiary">#B7B9C0</color>
+    <color name="textPrimary">#100F0F</color>
+    <color name="textPrimaryDisabled">#4C100F0F</color>
+    <color name="textSecondary">#403E3C</color>
+    <color name="textSecondaryDisabled">#4C403E3C</color>
+    <color name="textTertiary">#878580</color>
 
-    <color name="textPrimaryDark">#FFFFFFFF</color>
-    <color name="textPrimaryDisabledDark">#7FFFFFFF</color>
-    <color name="textSecondaryDark">#ccffffff</color>
-    <color name="textSecondaryDisabledDark">#67ffffff</color>
-    <color name="textTertiaryDark">#80ffffff</color>
+    <color name="textPrimaryDark">#FFc0caf5</color>
+    <color name="textPrimaryDisabledDark">#7Fc0caf5</color>
+    <color name="textSecondaryDark">#a9b1d6</color>
+    <color name="textSecondaryDisabledDark">#67a9b1d6</color>
+    <color name="textTertiaryDark">#565f89</color>
 
-    <color name="bubbleLight">#ECEFF1</color>
-    <color name="bubbleDark">#11171B</color>
+    <color name="bubbleLight">#E6E4D9</color>
+    <color name="bubbleDark">#24283b</color>
     <color name="bubbleBlack">#0F1113</color>
 
-    <color name="separatorLight">#0C000000</color>
-    <color name="separatorDark">#1AFFFFFF</color>
+    <color name="separatorLight">#B7B5AC</color>
+    <color name="separatorDark">#414868</color>
 
-    <color name="switchThumbEnabledLight">#ECECEC</color>
-    <color name="switchThumbEnabledDark">#B9B9B9</color>
+    <color name="switchThumbEnabledLight">#205EA6</color>
+    <color name="switchThumbEnabledDark">#7aa2f7</color>
 
-    <color name="switchTrackEnabledLight">#A6A6A6</color>
-    <color name="switchTrackEnabledDark">#646464</color>
+    <color name="switchTrackEnabledLight">#B7B5AC</color>
+    <color name="switchTrackEnabledDark">#414868</color>
 
-    <color name="switchThumbDisabledLight">#B9B9B9</color>
-    <color name="switchThumbDisabledDark">#595959</color>
+    <color name="switchThumbDisabledLight">#CECDC3</color>
+    <color name="switchThumbDisabledDark">#565f89</color>
 
     <color name="switchTrackDisabledLight">#D6D6D6</color>
     <color name="switchTrackDisabledDark">#383838</color>
 
     <!-- This colour should only ever be used for attrs with the tools tag -->
-    <color name="tools_theme">#00838F</color>
+    <color name="tools_theme">#7aa2f7</color>
 
     <array name="random_colors">
-        <item>#06C9AF</item>
-        <item>#6DC966</item>
-        <item>#F1AF28</item>
-        <item>#FF8963</item>
-        <item>#FF6969</item>
-        <item>#5D99FF</item>
-        <item>#8899EC</item>
+        <item>#7aa2f7</item>
+        <item>#bb9af7</item>
+        <item>#7dcfff</item>
+        <item>#9ece6a</item>
+        <item>#e0af68</item>
+        <item>#ff9e64</item>
+        <item>#f7768e</item>
+        <item>#0db9d7</item>
+        <item>#b9f27c</item>
+        <item>#ad8ee6</item>
     </array>
 
+    <!-- Omarchy palettes: the theme's colour names as accent choices. Ten per row, like the Material ones. -->
+    <array name="omarchy_tokyo_night">
+        <item>#7aa2f7</item>
+        <item>#7da6ff</item>
+        <item>#449dab</item>
+        <item>#0db9d7</item>
+        <item>#9ece6a</item>
+        <item>#b9f27c</item>
+        <item>#ad8ee6</item>
+        <item>#bb9af7</item>
+        <item>#eb927b</item>
+        <item>#f7768e</item>
+    </array>
+    <array name="omarchy_flexoki">
+        <item>#205EA6</item>
+        <item>#4385BE</item>
+        <item>#3AA99F</item>
+        <item>#879A39</item>
+        <item>#D0A215</item>
+        <item>#d0772b</item>
+        <item>#CE5D97</item>
+        <item>#D14D41</item>
+        <item>#683b15</item>
+        <item>#100F0F</item>
+    </array>
     <array name="material_red">
         <item>#FFEBEE</item>
         <item>#FFCDD2</item>

@@ -29,26 +29,12 @@ import javax.inject.Singleton
 @Singleton
 class FontProvider @Inject constructor(context: Context) {
 
-    private var lato: Typeface? = null
-    private val pendingCallbacks = ArrayList<(Typeface) -> Unit>()
+    // JetBrains Mono, bundled in res/font -- the family the Omarchy shell is drawn in.
+    // Bundled fonts load synchronously, so the callback shape kept for the callers
+    // resolves at once; a load failure falls back to the system monospace face.
+    private val mono: Typeface = ResourcesCompat.getFont(context, R.font.jetbrains_mono)
+        ?: Typeface.MONOSPACE.also { Timber.w("Bundled font failed to load; using system monospace") }
 
-    init {
-        ResourcesCompat.getFont(context, R.font.lato, object : ResourcesCompat.FontCallback() {
-            override fun onFontRetrievalFailed(reason: Int) {
-                Timber.w("Font retrieval failed: $reason")
-            }
-
-            override fun onFontRetrieved(typeface: Typeface) {
-                lato = typeface
-
-                pendingCallbacks.forEach { lato?.run(it) }
-                pendingCallbacks.clear()
-            }
-        }, null)
-    }
-
-    fun getLato(callback: (Typeface) -> Unit) {
-        lato?.run(callback) ?: pendingCallbacks.add(callback)
-    }
+    fun getLato(callback: (Typeface) -> Unit) = callback(mono)
 
 }

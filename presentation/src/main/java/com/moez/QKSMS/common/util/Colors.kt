@@ -45,6 +45,8 @@ class Colors @Inject constructor(
     }
 
     val materialColors: List<List<Int>> = listOf(
+        R.array.omarchy_tokyo_night,
+        R.array.omarchy_flexoki,
         R.array.material_red,
         R.array.material_pink,
         R.array.material_purple,
