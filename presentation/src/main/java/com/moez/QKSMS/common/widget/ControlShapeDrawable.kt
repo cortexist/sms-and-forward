@@ -30,6 +30,8 @@ import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Build
 import dev.octoshrimpy.quik.util.Preferences
+import java.util.Collections
+import java.util.WeakHashMap
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.min
@@ -40,8 +42,19 @@ import kotlin.math.withSign
 class ControlShapeDrawable : Drawable() {
 
     companion object {
+        // Every live instance, so a preference change reaches views that already exist:
+        // recycler rows, the compose button and the compose screen all outlive a visit to
+        // Settings and would otherwise keep the path they built when first laid out.
+        private val live: MutableSet<ControlShapeDrawable> =
+            Collections.newSetFromMap(WeakHashMap<ControlShapeDrawable, Boolean>())
+
         /** Preferences.SHAPE_*; set once at startup and whenever the preference changes. */
         @Volatile var shape: Int = Preferences.SHAPE_SQUARE
+            set(value) {
+                if (field == value) return
+                field = value
+                synchronized(live) { live.toList() }.forEach { it.invalidateSelf() }
+            }
 
         private const val ROUNDED_RADIUS = 0.22f   // of the shorter side
         private const val SQUIRCLE_N = 4.0         // superellipse exponent; One UI sits near here
@@ -76,14 +89,27 @@ class ControlShapeDrawable : Drawable() {
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL; color = Color.WHITE }
     private val path = Path()
+    private var builtShape = -1
     private var tint: ColorStateList? = null
+
+    init {
+        synchronized(live) { live.add(this) }
+    }
 
     override fun onBoundsChange(bounds: Rect) {
         super.onBoundsChange(bounds)
-        build(shape, bounds, path)
+        rebuild()
     }
 
-    override fun draw(canvas: Canvas) = canvas.drawPath(path, paint)
+    private fun rebuild() {
+        builtShape = shape
+        build(builtShape, bounds, path)
+    }
+
+    override fun draw(canvas: Canvas) {
+        if (builtShape != shape) rebuild()   // the setting changed since this path was built
+        canvas.drawPath(path, paint)
+    }
 
     override fun setAlpha(alpha: Int) { paint.alpha = alpha; invalidateSelf() }
     override fun getAlpha(): Int = paint.alpha

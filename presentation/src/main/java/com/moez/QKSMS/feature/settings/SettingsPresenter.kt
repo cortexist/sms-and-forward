@@ -151,13 +151,9 @@ class SettingsPresenter @Inject constructor(
         disposables += prefs.bridgeEndpoint.asObservable()
             .subscribe { endpoint -> newState { copy(bridgeEndpoint = endpoint) } }
 
-        // Enough of the token to recognise it, never enough to use it.
+        // The head of the token, enough to tell which one is set, never enough to use it.
         disposables += prefs.bridgeToken.asObservable()
-            .subscribe { token -> newState { copy(bridgeTokenHint = when {
-                token.isBlank() -> ""
-                token.length <= 8 -> "\u2022".repeat(token.length)
-                else -> token.take(5) + "\u2026" + token.takeLast(3)
-            }) } }
+            .subscribe { token -> newState { copy(bridgeTokenHint = if (token.isBlank()) "" else token.take(6) + "\u2026") } }
 
         disposables += prefs.controlShape.asObservable()
             .subscribe { shape -> newState { copy(controlShape = shape) } }
