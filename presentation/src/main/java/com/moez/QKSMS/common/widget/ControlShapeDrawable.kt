@@ -33,12 +33,7 @@ import android.view.View
 import dev.octoshrimpy.quik.util.Preferences
 import java.util.Collections
 import java.util.WeakHashMap
-import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.withSign
 
 class ControlShapeDrawable : Drawable() {
 
@@ -58,8 +53,10 @@ class ControlShapeDrawable : Drawable() {
             }
 
         private const val ROUNDED_RADIUS = 0.22f   // of the shorter side
-        private const val SQUIRCLE_N = 4.0         // superellipse exponent; One UI sits near here
-        private const val SQUIRCLE_STEPS = 96
+        // One UI's icon squircle, taken from Samsung's own SVG: four cubic Béziers, each from
+        // one side's midpoint to the next, with both control points 70% of the way along the
+        // edges (0.7 = 46.706 / 66.722 in the 134-unit source).
+        private const val SQUIRCLE_K = 0.70f
 
         fun build(shape: Int, bounds: Rect, into: Path): Path {
             into.reset()
@@ -73,13 +70,12 @@ class ControlShapeDrawable : Drawable() {
                 Preferences.SHAPE_SQUIRCLE -> {
                     val cx = rect.centerX(); val cy = rect.centerY()
                     val rx = rect.width() / 2f; val ry = rect.height() / 2f
-                    for (i in 0 until SQUIRCLE_STEPS) {
-                        val t = 2.0 * Math.PI * i / SQUIRCLE_STEPS
-                        val c = cos(t); val s = sin(t)
-                        val x = cx + (abs(c).pow(2.0 / SQUIRCLE_N).withSign(c) * rx).toFloat()
-                        val y = cy + (abs(s).pow(2.0 / SQUIRCLE_N).withSign(s) * ry).toFloat()
-                        if (i == 0) into.moveTo(x, y) else into.lineTo(x, y)
-                    }
+                    val kx = rx * SQUIRCLE_K; val ky = ry * SQUIRCLE_K
+                    into.moveTo(cx - rx, cy)
+                    into.cubicTo(cx - rx, cy - ky, cx - kx, cy - ry, cx, cy - ry)
+                    into.cubicTo(cx + kx, cy - ry, cx + rx, cy - ky, cx + rx, cy)
+                    into.cubicTo(cx + rx, cy + ky, cx + kx, cy + ry, cx, cy + ry)
+                    into.cubicTo(cx - kx, cy + ry, cx - rx, cy + ky, cx - rx, cy)
                     into.close()
                 }
                 else -> into.addRect(rect, Path.Direction.CW)
