@@ -177,7 +177,7 @@ jobs:
 
           description = (
               f"Automated update after {pr_url}\n\n"
-              f"GitHub release: https://github.com/octoshrimpy/quik/releases/tag/v{version}"
+              f"GitHub release: https://github.com/cortexist/sms-forward/releases/tag/v{version}"
           )
 
           payload = urllib.parse.urlencode({

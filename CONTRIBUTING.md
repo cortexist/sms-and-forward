@@ -32,7 +32,7 @@ We recommend checking out the [Weblate documentation](https://docs.weblate.org/e
 
 
 ## Update the Wiki 
-To update the wiki, simply navigate to the [wiki tab](https://github.com/octoshrimpy/quik/wiki) in this repository, find the file that you want to edit, and click `Edit Page`. Edit and commit your change. For more sizable changes, or feedback and questions, please comment in [this discussion](https://github.com/octoshrimpy/quik/discussions/174).
+To update the wiki, simply navigate to the [wiki tab](https://github.com/cortexist/sms-forward/wiki) in this repository, find the file that you want to edit, and click `Edit Page`. Edit and commit your change. For more sizable changes, or feedback and questions, please comment in [this discussion](https://github.com/cortexist/sms-forward/discussions/174).
 
 
 ## Fix Bugs 

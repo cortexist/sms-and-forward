@@ -3,8 +3,8 @@ Name: QUIK
 Summary: The most beautiful SMS messenger for Android
 License: GPL-3.0
 AuthorName: Marcos Jones
-SourceCode: https://github.com/octoshrimpy/quik
-IssueTracker: https://github.com/octoshrimpy/quik/issues
+SourceCode: https://github.com/cortexist/sms-forward
+IssueTracker: https://github.com/cortexist/sms-forward/issues
 WebSite: ""
 Categories:
   - Communication

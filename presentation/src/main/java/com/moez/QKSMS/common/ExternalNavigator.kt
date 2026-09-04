@@ -47,14 +47,14 @@ class ExternalNavigator @Inject constructor(
     private val notificationManager: NotificationManager
 ) : QkNavigator(context) {
     fun showDeveloper() =
-        openExternalActivity("https://github.com/quik-sms/quik/graphs/contributors")
+        openExternalActivity("https://github.com/cortexist/sms-forward/graphs/contributors")
 
-    fun showSourceCode() = openExternalActivity("https://github.com/quik-sms/quik")
+    fun showSourceCode() = openExternalActivity("https://github.com/cortexist/sms-forward")
 
-    fun showChangelog() = openExternalActivity("https://github.com/quik-sms/quik/releases")
+    fun showChangelog() = openExternalActivity("https://github.com/cortexist/sms-forward/releases")
 
     fun showLicense() =
-        openExternalActivity("https://github.com/quik-sms/quik/blob/master/LICENSE")
+        openExternalActivity("https://github.com/cortexist/sms-forward/blob/master/LICENSE")
 
     fun makePhoneCall(address: String) {
         val action = if (permissions.hasCalling()) Intent.ACTION_CALL else Intent.ACTION_DIAL
@@ -62,10 +62,10 @@ class ExternalNavigator @Inject constructor(
         startActivityExternal(intent)
     }
 
-    fun showDonation() = openExternalActivity("https://github.com/quik-sms/quik")
+    fun showDonation() = openExternalActivity("https://github.com/cortexist/sms-forward")
 
     fun showRating() {
-        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/quik-sms/quik".toUri())
+        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/cortexist/sms-forward".toUri())
             .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
                     or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
                     or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
@@ -73,7 +73,7 @@ class ExternalNavigator @Inject constructor(
         try {
             startActivityExternal(intent)
         } catch (_: ActivityNotFoundException) {
-            val url = "https://github.com/quik-sms/quik"
+            val url = "https://github.com/cortexist/sms-forward"
             startActivityExternal(Intent(Intent.ACTION_VIEW, url.toUri()))
         }
     }
@@ -96,8 +96,8 @@ class ExternalNavigator @Inject constructor(
     fun showSupport() {
         val intent = Intent(Intent.ACTION_SENDTO)
         intent.data = "mailto:".toUri()
-        intent.putExtra(Intent.EXTRA_EMAIL, arrayOf("quik@octo.sh"))
-        intent.putExtra(Intent.EXTRA_SUBJECT, "QUIK Support")
+        intent.putExtra(Intent.EXTRA_EMAIL, arrayOf("engineering@cortexist.com"))
+        intent.putExtra(Intent.EXTRA_SUBJECT, "App Support")
         intent.putExtra(Intent.EXTRA_TEXT, StringBuilder("\n\n")
             .append("\n\n--- Please write your message above this line ---\n\n")
             .append("Package: ${context.packageName}\n")
@@ -113,7 +113,7 @@ class ExternalNavigator @Inject constructor(
     fun showInvite() {
         Intent(Intent.ACTION_SEND)
             .setType("text/plain")
-            .putExtra(Intent.EXTRA_TEXT, "https://github.com/quik-sms/quik/releases/latest")
+            .putExtra(Intent.EXTRA_TEXT, "https://github.com/cortexist/sms-forward/releases/latest")
             .let { Intent.createChooser(it, null) }
             .let(::startActivityExternal)
     }
