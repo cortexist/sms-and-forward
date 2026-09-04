@@ -228,6 +228,7 @@
     <string name="settings_category_general">Ogólne</string>
     <string name="settings_category_qkreply">Szybka odpowiedź</string>
     <string name="settings_theme_title">Motyw</string>
+    <string name="settings_shape_title">Kształt elementów sterujących</string>
     <string name="settings_night_title">Tryb nocny</string>
     <string name="settings_black_title">Czarne tło w trybie nocnym</string>
     <string name="settings_night_start_title">Czas rozpoczęcia</string>

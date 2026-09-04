@@ -214,6 +214,7 @@
     <string name="settings_category_general">Общи</string>
     <string name="settings_category_qkreply">Бърз отговор</string>
     <string name="settings_theme_title">Тема</string>
+    <string name="settings_shape_title">Форма на контролите</string>
     <string name="settings_night_title">Нощен режим</string>
     <string name="settings_black_title">Чисто черен нощен режим</string>
     <string name="settings_night_start_title">Начален час</string>

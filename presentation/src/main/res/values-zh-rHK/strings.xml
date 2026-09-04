@@ -189,6 +189,7 @@
     <string name="settings_category_general">通用</string>
     <string name="settings_category_qkreply">快速答覆</string>
     <string name="settings_theme_title">主題</string>
+    <string name="settings_shape_title">控制項形狀</string>
     <string name="settings_night_title">夜間模式</string>
     <string name="settings_black_title">純黑色夜間模式</string>
     <string name="settings_night_start_title">開始時間</string>

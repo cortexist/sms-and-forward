@@ -50,7 +50,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:icon="@drawable/ic_shape_rounded"
-            app:summary="@string/settings_shape_summary"
             app:title="@string/settings_shape_title"
             app:widget="@layout/settings_shape_widget" />
 

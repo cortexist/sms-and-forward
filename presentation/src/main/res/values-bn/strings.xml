@@ -190,6 +190,7 @@
     <string name="settings_category_general">সাধারণ</string>
     <string name="settings_category_qkreply">QK উত্তর</string>
     <string name="settings_theme_title">থিম</string>
+    <string name="settings_shape_title">নিয়ন্ত্রণের আকৃতি</string>
     <string name="settings_night_title">নাইট মোড</string>
     <string name="settings_black_title">সম্পূর্ণ কালো রাত্রি মোড</string>
     <string name="settings_night_start_title">শুরুর সময়</string>

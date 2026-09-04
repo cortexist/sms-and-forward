@@ -190,6 +190,7 @@
     <string name="settings_category_general">General</string>
     <string name="settings_category_qkreply">Responder vía SMS &amp; Forward</string>
     <string name="settings_theme_title">Tema</string>
+    <string name="settings_shape_title">Forma de los controles</string>
     <string name="settings_night_title">Modo nocturno</string>
     <string name="settings_black_title">Modo noche negro puro</string>
     <string name="settings_night_start_title">Hora de inicio</string>

@@ -192,6 +192,7 @@
     <string name="settings_category_general">Bendra</string>
     <string name="settings_category_qkreply">Greitas atsakas</string>
     <string name="settings_theme_title">Tema</string>
+    <string name="settings_shape_title">Valdiklių forma</string>
     <string name="settings_night_title">Nakties tema</string>
     <string name="settings_black_title">Visiškai juoda nakties tema</string>
     <string name="settings_night_start_title">Pradžios laikas</string>

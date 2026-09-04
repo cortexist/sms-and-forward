@@ -188,6 +188,7 @@
     <string name="settings_category_general">عمومی</string>
     <string name="settings_category_qkreply">پاسخ سریع</string>
     <string name="settings_theme_title">پوسته</string>
+    <string name="settings_shape_title">شکل کنترل‌ها</string>
     <string name="settings_night_title">حالت شب</string>
     <string name="settings_black_title">حالت شب کاملا سیاه</string>
     <string name="settings_night_start_title">زمان آغاز</string>

@@ -265,7 +265,6 @@
 
     <string name="settings_theme_title">Theme</string>
     <string name="settings_shape_title">Control shape</string>
-    <string name="settings_shape_summary">Avatars and buttons: square by default, or match your launcher\'s icons</string>
     <string name="settings_night_title">Night mode</string>
     <string name="settings_black_title">Pure black night mode</string>
     <string name="settings_night_start_title">Start time</string>

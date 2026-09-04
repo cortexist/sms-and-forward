@@ -191,6 +191,7 @@
     <string name="settings_category_general">Općenito</string>
     <string name="settings_category_qkreply">QK odgovor</string>
     <string name="settings_theme_title">Tema</string>
+    <string name="settings_shape_title">Oblik kontrola</string>
     <string name="settings_night_title">Noćni način</string>
     <string name="settings_black_title">Potpuno crni noćni način</string>
     <string name="settings_night_start_title">Vrijeme početka</string>

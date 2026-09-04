@@ -190,6 +190,7 @@
     <string name="settings_category_general">Allgemein</string>
     <string name="settings_category_qkreply">Schnellantwort</string>
     <string name="settings_theme_title">Erscheinungsbild</string>
+    <string name="settings_shape_title">Form der Bedienelemente</string>
     <string name="settings_night_title">Nachtmodus</string>
     <string name="settings_black_title">Rein schwarzer Nachtmodus</string>
     <string name="settings_night_start_title">Anfang</string>

@@ -191,6 +191,7 @@
     <string name="settings_category_general">Опште</string>
     <string name="settings_category_qkreply">Брзи одговор</string>
     <string name="settings_theme_title">Тема</string>
+    <string name="settings_shape_title">Облик контрола</string>
     <string name="settings_night_title">Ноћни мод</string>
     <string name="settings_black_title">Потпуно црни ноћни мод</string>
     <string name="settings_night_start_title">Време почетка</string>

@@ -192,6 +192,7 @@
     <string name="settings_category_general">Všeobecné</string>
     <string name="settings_category_qkreply">Rýchla odpoveď</string>
     <string name="settings_theme_title">Motív</string>
+    <string name="settings_shape_title">Tvar ovládacích prvkov</string>
     <string name="settings_night_title">Nočný režim</string>
     <string name="settings_black_title">Čisto čierny nočný režim</string>
     <string name="settings_night_start_title">Čas spustenia</string>
