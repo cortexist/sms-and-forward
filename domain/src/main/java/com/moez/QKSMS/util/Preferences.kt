@@ -195,10 +195,10 @@ class Preferences @Inject constructor(
 
     fun theme(
         recipientId: Long = 0,
-        default: Int = rxPrefs.getInteger("theme", 0xFF7AA2F7.toInt()).get()
+        default: Int = rxPrefs.getInteger("theme", 0xFFB9F27C.toInt()).get()
     ): Preference<Int> {
         return when (recipientId) {
-            0L -> rxPrefs.getInteger("theme", 0xFF7AA2F7.toInt())
+            0L -> rxPrefs.getInteger("theme", 0xFFB9F27C.toInt())
             else -> rxPrefs.getInteger("theme_$recipientId", default)
         }
     }
