@@ -287,6 +287,14 @@
             app:title="@string/settings_bridge_token_title"
             tools:summary="@string/settings_bridge_token_unset" />
 
+        <dev.octoshrimpy.quik.common.widget.PreferenceView
+            android:id="@+id/bridgePair"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_camera_alt_black_24dp"
+            app:summary="@string/settings_bridge_pair_summary"
+            app:title="@string/settings_bridge_pair_title" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"

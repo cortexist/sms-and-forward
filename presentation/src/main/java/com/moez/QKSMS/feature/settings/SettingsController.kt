@@ -18,6 +18,10 @@
  */
 package dev.octoshrimpy.quik.feature.settings
 
+import androidx.activity.result.ActivityResultLauncher
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
+import dev.octoshrimpy.quik.common.util.extensions.makeToast
 import android.animation.ObjectAnimator
 import android.app.TimePickerDialog
 import android.content.Context
@@ -102,6 +106,8 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     private val signatureSubject: Subject<String> = PublishSubject.create()
     private val bridgeEndpointSubject: Subject<String> = PublishSubject.create()
     private val bridgeTokenSubject: Subject<String> = PublishSubject.create()
+    private val bridgePairSubject: Subject<String> = PublishSubject.create()
+    private lateinit var scanPairCode: ActivityResultLauncher<ScanOptions>
     private val controlShapeSubject: Subject<Int> = PublishSubject.create()
     private val bubbleStyleSubject: Subject<Int> = PublishSubject.create()
 
@@ -136,6 +142,13 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
         binding.about.summary = context.getString(R.string.settings_version, BuildConfig.VERSION_NAME)
     }
 
+    override fun onContextAvailable(context: Context) {
+        // The scanner's own activity asks for the camera permission; a cancelled scan yields null.
+        scanPairCode = themedActivity!!.registerForActivityResult(ScanContract()) { result ->
+            result.contents?.let(bridgePairSubject::onNext)
+        }
+    }
+
     override fun onAttach(view: View) {
         super.onAttach(view)
         presenter.bindIntents(this)
@@ -168,6 +181,8 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun bridgeEndpointChanged(): Observable<String> = bridgeEndpointSubject
 
     override fun bridgeTokenChanged(): Observable<String> = bridgeTokenSubject
+
+    override fun bridgePairScanned(): Observable<String> = bridgePairSubject
 
     override fun controlShapeSelected(): Observable<Int> = controlShapeSubject
 
@@ -292,6 +307,17 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun showBridgeEndpointDialog(endpoint: String) = bridgeEndpointDialog.setText(endpoint).show()
 
     override fun showBridgeTokenDialog(token: String) = bridgeTokenDialog.setText(token).show()
+
+    override fun showBridgePairScanner() = scanPairCode.launch(ScanOptions().apply {
+        setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+        setPrompt(context.getString(R.string.settings_bridge_pair_prompt))
+        setOrientationLocked(false)
+        setBeepEnabled(false)
+    })
+
+    override fun showBridgePaired(endpoint: String) = context.makeToast(context.getString(R.string.settings_bridge_paired, endpoint))
+
+    override fun showBridgePairInvalid() = context.makeToast(R.string.settings_bridge_pair_invalid)
 
     private fun bubbleViews(): List<ImageView> = listOf(R.id.bubbleBoxes, R.id.bubbleRounded)
             .map { id -> binding.bubbleStyle.findViewById<ImageView>(id) }

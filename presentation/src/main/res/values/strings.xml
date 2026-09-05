@@ -346,6 +346,11 @@
     <string name="settings_bridge_endpoint_summary">Not set</string>
     <string name="settings_bridge_token_title">Bridge token</string>
     <string name="settings_bridge_token_unset">Not set</string>
+    <string name="settings_bridge_pair_title">Pair with desktop</string>
+    <string name="settings_bridge_pair_summary">Scan the code shown by SMS desktop to fill in the endpoint and token</string>
+    <string name="settings_bridge_pair_prompt">Point the camera at the pairing code in SMS desktop</string>
+    <string name="settings_bridge_paired">Paired with %s</string>
+    <string name="settings_bridge_pair_invalid">That is not an SMS &amp; Forward pairing code</string>
     <string name="settings_sync_title">Sync messages</string>
     <string name="settings_sync_summary">Re-sync your messages with the native Android SMS database</string>
     <string name="settings_about_title">About SMS &amp; Forward</string>

@@ -34,6 +34,7 @@ interface SettingsView : QkViewContract<SettingsState> {
     fun signatureChanged(): Observable<String>
     fun bridgeEndpointChanged(): Observable<String>
     fun bridgeTokenChanged(): Observable<String>
+    fun bridgePairScanned(): Observable<String>
     fun controlShapeSelected(): Observable<Int>
     fun bubbleStyleSelected(): Observable<Int>
     fun mmsSizeSelected(): Observable<Int>
@@ -48,6 +49,9 @@ interface SettingsView : QkViewContract<SettingsState> {
     fun showSignatureDialog(signature: String)
     fun showBridgeEndpointDialog(endpoint: String)
     fun showBridgeTokenDialog(token: String)
+    fun showBridgePairScanner()
+    fun showBridgePaired(endpoint: String)
+    fun showBridgePairInvalid()
     fun showMmsSizePicker()
     fun showMessageLinkHandlingDialogPicker()
     fun showSwipeActions()

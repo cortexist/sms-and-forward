@@ -243,6 +243,8 @@ class SettingsPresenter @Inject constructor(
 
                         R.id.bridgeToken -> view.showBridgeTokenDialog(prefs.bridgeToken.get())
 
+                        R.id.bridgePair -> view.showBridgePairScanner()
+
                         // Tapping the row itself steps to the next shape; the widget's outlines pick directly.
                         R.id.controlShape -> prefs.controlShape.set((prefs.controlShape.get() + 1) % 4)
 
@@ -317,6 +319,24 @@ class SettingsPresenter @Inject constructor(
 
         view.bridgeTokenChanged()
                 .doOnNext { token -> prefs.bridgeToken.set(token.trim()) }
+                .autoDisposable(view.scope())
+                .subscribe()
+
+        // A pairing code from SMS desktop: smsforward://pair?endpoint=<url>&token=<token>.
+        // It fills both fields and turns forwarding on, so the phone starts forwarding
+        // right away; anything else is refused without touching the settings.
+        view.bridgePairScanned()
+                .doOnNext { code ->
+                    val pair = BridgePairing.parse(code)
+                    if (pair == null) {
+                        view.showBridgePairInvalid()
+                    } else {
+                        prefs.bridgeEndpoint.set(pair.first)
+                        prefs.bridgeToken.set(pair.second)
+                        prefs.bridgeEnabled.set(true)
+                        view.showBridgePaired(pair.first)
+                    }
+                }
                 .autoDisposable(view.scope())
                 .subscribe()
 
