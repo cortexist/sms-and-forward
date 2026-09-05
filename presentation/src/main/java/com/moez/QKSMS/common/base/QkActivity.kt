@@ -23,6 +23,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.ViewCompat
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -65,14 +67,34 @@ abstract class QkActivity : AppCompatActivity() {
 
     override fun setContentView(layoutResID: Int) {
         super.setContentView(layoutResID)
+        fitSystemBars()
         setSupportActionBar(toolbar)
         title = title // The title may have been set before layout inflation
     }
 
     override fun setContentView(view: View?) {
         super.setContentView(view)
+        fitSystemBars()
         setSupportActionBar(toolbar)
         title = title // The title may have been set before layout inflation
+    }
+
+    /**
+     * Targeting API 36 the window is edge-to-edge whether we like it or not (the API 35 opt-out
+     * is gone), so the content would sit under the status bar and the navigation bar. Pad the
+     * window's content by the system bars, the cutout and the keyboard, and consume the insets
+     * so no descendant applies them a second time. The window background shows through the
+     * transparent bars, which is the look the themes already define.
+     */
+    private fun fitSystemBars() {
+        val content = findViewById<View>(android.R.id.content) ?: return
+        ViewCompat.setOnApplyWindowInsetsListener(content) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.requestApplyInsets(content)
     }
 
     override fun setTitle(titleId: Int) {
