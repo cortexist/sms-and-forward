@@ -22,6 +22,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
+import dev.octoshrimpy.quik.R
 import dev.octoshrimpy.quik.compat.TelephonyCompat
 import dev.octoshrimpy.quik.extensions.resourceExists
 import dev.octoshrimpy.quik.feature.settings.about.AboutActivity
@@ -54,6 +55,10 @@ class Navigator @Inject constructor(
     fun showMainActivity() {
         startActivity(Intent(context, MainActivity::class.java))
     }
+
+    /** Invite friends: compose in this app with the recipient chosen here, rather than the
+     *  system share sheet whose direct-share targets belong to other messaging apps. */
+    fun showInvite() = showCompose(context.getString(R.string.invite_body))
 
     fun showCompose(body: String? = null, attachments: List<Uri>? = null, mode: String? = null) {
         val intent = Intent(context, ComposeActivity::class.java)

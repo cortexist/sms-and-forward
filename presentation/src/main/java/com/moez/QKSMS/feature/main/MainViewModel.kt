@@ -349,7 +349,9 @@ class MainViewModel @Inject constructor(
                         NavItem.ABOUT -> navigator.showAbout()
 //                        NavItem.PLUS -> navigator.showQksmsPlusActivity("main_menu")
 //                        NavItem.HELP -> navigator.showSupport()
-                        NavItem.INVITE -> externalNavigator.showInvite()
+                        // Compose inside this app rather than the system share sheet, whose direct-share
+                        // targets belong to other messaging apps and route the invite through them.
+                        NavItem.INVITE -> navigator.showInvite()
                         else -> Unit
                     }
                     drawerItem

@@ -113,7 +113,7 @@ class ExternalNavigator @Inject constructor(
     fun showInvite() {
         Intent(Intent.ACTION_SEND)
             .setType("text/plain")
-            .putExtra(Intent.EXTRA_TEXT, "https://github.com/cortexist/sms-forward/releases/latest")
+            .putExtra(Intent.EXTRA_TEXT, "https://github.com/cortexist/sms-and-forward/releases/latest")
             .let { Intent.createChooser(it, null) }
             .let(::startActivityExternal)
     }

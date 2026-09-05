@@ -92,6 +92,7 @@
     <string name="drawer_plus" translatable="false">DEPRECATED - drawer_plus</string>
     <string name="drawer_help">Help &amp; feedback</string>
     <string name="drawer_invite">Invite friends</string>
+    <string name="invite_body" translatable="false">I text with SMS &amp; Forward, an open-source SMS app that can forward texts to your own computer: https://github.com/cortexist/sms-and-forward/releases/latest</string>
     <string name="drawer_plus_banner_title" translatable="false">DEPRECATED - drawer_plus_banner_title</string>
     <string name="drawer_plus_banner_summary">Unlock amazing new features, and support development</string>
 
