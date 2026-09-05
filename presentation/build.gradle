@@ -28,8 +28,8 @@ android {
         applicationId 'com.cortexist.smsforward'
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 2238
-        versionName '4.3.6'
+        versionCode 2239
+        versionName '4.4.0'
         setProperty("archivesBaseName", "SMS-and-Forward-v${versionName}")
         resValue("string", "application_id", "com.cortexist.smsforward")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
