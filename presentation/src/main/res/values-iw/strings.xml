@@ -193,6 +193,8 @@
     <string name="settings_category_qkreply">תגובה מהירה</string>
     <string name="settings_theme_title">ערכת נושא</string>
     <string name="settings_shape_title">צורת הפקדים</string>
+    <string name="settings_bubble_title">צורת ההודעות</string>
+    <string name="settings_outgoing_accent_title">צביעת הודעות יוצאות</string>
     <string name="settings_night_title">מצב לילה</string>
     <string name="settings_black_title">מצב לילה שחור טהור</string>
     <string name="settings_night_start_title">זמן התחלה</string>

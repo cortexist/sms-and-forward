@@ -1,0 +1,113 @@
+# Tag a commit vX.Y.Z (matching versionName in presentation/build.gradle, after bumping
+# versionCode) and this builds the signed app bundle and APK, attaches both to a GitHub
+# release, and -- when the Play service-account secret exists -- uploads the bundle to
+# the Play Console's internal testing track.
+#
+# Secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
+# ANDROID_KEY_PASSWORD (the upload key; Play App Signing holds the real app key), and
+# optionally PLAY_SERVICE_ACCOUNT_JSON (a Google Cloud service account granted release
+# access in the Play Console).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      play_track:
+        description: Play track to upload to (leave empty to skip)
+        required: false
+        default: internal
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Check the tag matches versionName
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          name=$(sed -nE "s/^\s*versionName\s+'([0-9.]+)'.*/\1/p" presentation/build.gradle)
+          tag="${GITHUB_REF_NAME#v}"
+          if [[ "$name" != "$tag" ]]; then
+            echo "::error::tag v$tag but presentation/build.gradle says versionName $name"; exit 1
+          fi
+
+      - name: Install the upload keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for v in KEYSTORE_B64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            [[ -n "${!v:-}" ]] || { echo "::error::secret $v is not set"; exit 1; }
+          done
+          echo "$KEYSTORE_B64" | base64 -d > presentation/my-release-key.keystore
+          chmod 600 presentation/my-release-key.keystore
+          {
+            echo "keystore_password=$KEYSTORE_PASSWORD"
+            echo "key_alias=$KEY_ALIAS"
+            echo "key_password=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
+      - name: Build signed bundle and APK
+        run: ./gradlew :presentation:bundleRelease :presentation:assembleRelease --no-daemon
+
+      - name: Collect artifacts
+        id: art
+        run: |
+          set -euo pipefail
+          aab=$(ls presentation/build/outputs/bundle/release/*.aab)
+          apk=$(ls presentation/build/outputs/apk/release/*.apk)
+          sha256sum "$aab" "$apk" > checksums.txt
+          echo "aab=$aab" >> "$GITHUB_OUTPUT"; echo "apk=$apk" >> "$GITHUB_OUTPUT"
+          cat checksums.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMS-and-Forward-release
+          path: |
+            ${{ steps.art.outputs.aab }}
+            ${{ steps.art.outputs.apk }}
+            checksums.txt
+
+      - name: GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.art.outputs.aab }}
+            ${{ steps.art.outputs.apk }}
+            checksums.txt
+          generate_release_notes: true
+
+      - name: Upload to Google Play
+        if: ${{ env.PLAY_SA != '' && (startsWith(github.ref, 'refs/tags/') || inputs.play_track != '') }}
+        env:
+          PLAY_SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.cortexist.smsforward
+          releaseFiles: ${{ steps.art.outputs.aab }}
+          track: ${{ inputs.play_track || 'internal' }}
+          status: completed
+
+      - name: Remove the keystore
+        if: always()
+        run: rm -f presentation/my-release-key.keystore

@@ -39,6 +39,7 @@ import com.moez.QKSMS.manager.MediaRecorderManager.AUDIO_FILE_SUFFIX
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDisposable
 import dev.octoshrimpy.quik.R
+import dev.octoshrimpy.quik.bridge.AgentChannel
 import dev.octoshrimpy.quik.common.ExternalNavigator
 import dev.octoshrimpy.quik.common.Navigator
 import dev.octoshrimpy.quik.common.base.QkViewModel
@@ -262,7 +263,7 @@ class ComposeViewModel @Inject constructor(
             .map { conversation ->
                 var possibleNumbers = 0
                 conversation.recipients.forEach { recipient ->
-                    if (phoneNumberUtils.isPossibleNumber(recipient.address))
+                    if (phoneNumberUtils.isPossibleNumber(recipient.address) || AgentChannel.isAgent(recipient.address))
                         ++possibleNumbers
                 }
                 possibleNumbers

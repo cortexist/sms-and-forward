@@ -193,6 +193,8 @@
     <string name="settings_category_qkreply">Швидка відповідь</string>
     <string name="settings_theme_title">Тема</string>
     <string name="settings_shape_title">Форма елементів керування</string>
+    <string name="settings_bubble_title">Форма повідомлень</string>
+    <string name="settings_outgoing_accent_title">Колір вихідних повідомлень</string>
     <string name="settings_night_title">Нічний режим</string>
     <string name="settings_black_title">Повністю чорний нічний режим</string>
     <string name="settings_night_start_title">Час початку</string>

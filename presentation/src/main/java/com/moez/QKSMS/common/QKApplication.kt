@@ -54,6 +54,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import dev.octoshrimpy.quik.common.widget.ControlShapeDrawable
+import dev.octoshrimpy.quik.common.widget.MessageBubbleDrawable
 import dev.octoshrimpy.quik.util.Preferences
 
 class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverInjector, HasServiceInjector {
@@ -104,6 +105,7 @@ class QKApplication : Application(), HasActivityInjector, HasBroadcastReceiverIn
         // ControlShapeDrawable is built by the resource system without a Context, so it reads
         // a static; keep that static equal to the preference for the life of the process.
         prefs.controlShape.asObservable().subscribe { shape -> ControlShapeDrawable.shape = shape }
+        prefs.bubbleStyle.asObservable().subscribe { style -> MessageBubbleDrawable.style = style }
 
         // configure timber logging
         Timber.plant(Timber.DebugTree(), fileLoggingTree)

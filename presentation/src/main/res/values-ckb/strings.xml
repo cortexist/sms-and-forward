@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_shape_title">شێوەی کۆنترۆڵەکان</string>
+    <string name="settings_bubble_title">شێوەی نامەکان</string>
+    <string name="settings_outgoing_accent_title">ڕەنگکردنی نامە نێردراوەکان</string>
 </resources>

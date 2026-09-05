@@ -36,6 +36,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import dev.octoshrimpy.quik.bridge.AgentChannel
 import dev.octoshrimpy.quik.bridge.BridgeConfig
+import dev.octoshrimpy.quik.bridge.BridgeIds
 import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.Message
 import dev.octoshrimpy.quik.repository.ConversationRepository
@@ -193,7 +194,7 @@ class BackfillWorker(appContext: Context, params: WorkerParameters)
                 .joinToString("\n")
         }
         return JSONObject().apply {
-            put("id", "$kind:${m.id}")
+            put("id", BridgeIds.of(m))
             // boxId tells inbox from sent; without it every historic conversation would
             // read as if only the other side ever spoke.
             put("dir", if (m.isMe()) "out" else "in")

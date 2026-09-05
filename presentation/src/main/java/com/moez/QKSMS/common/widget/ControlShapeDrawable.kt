@@ -89,6 +89,12 @@ class ControlShapeDrawable : Drawable() {
     private var builtShape = -1
     private var tint: ColorStateList? = null
 
+    /** A shape for this instance alone (an agent's avatar); null follows the global setting. */
+    var shapeOverride: Int? = null
+        set(value) { field = value; rebuild(); (callback as? View)?.invalidateOutline(); invalidateSelf() }
+
+    private val effectiveShape: Int get() = shapeOverride ?: shape
+
     init {
         synchronized(live) { live.add(this) }
     }
@@ -99,7 +105,7 @@ class ControlShapeDrawable : Drawable() {
     }
 
     private fun rebuild() {
-        builtShape = shape
+        builtShape = effectiveShape
         build(builtShape, bounds, path)
     }
 
@@ -112,7 +118,7 @@ class ControlShapeDrawable : Drawable() {
     }
 
     override fun draw(canvas: Canvas) {
-        if (builtShape != shape) rebuild()   // the setting changed since this path was built
+        if (builtShape != effectiveShape) rebuild()   // the setting changed since this path was built
         canvas.drawPath(path, paint)
     }
 

@@ -190,6 +190,8 @@
     <string name="settings_category_qkreply">QK Reply</string>
     <string name="settings_theme_title">テーマ</string>
     <string name="settings_shape_title">コントロールの形状</string>
+    <string name="settings_bubble_title">メッセージの形状</string>
+    <string name="settings_outgoing_accent_title">送信メッセージに色を付ける</string>
     <string name="settings_night_title">夜間モード</string>
     <string name="settings_black_title">ピュアブラック夜間モード</string>
     <string name="settings_night_start_title">開始時刻</string>

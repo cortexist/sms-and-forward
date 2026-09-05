@@ -134,9 +134,16 @@ class ConversationsAdapter @Inject constructor(
         binding.unread.setTint(theme)
 
         // A failed last message is a fact about the conversation, not a detail inside it.
+        // The colour is set on every bind, not only when failed: rows are recycled, and a
+        // row that once showed a failed thread would otherwise keep its red for the next one.
         val failed = lastMessage?.isFailedMessage() == true
         binding.failed.isVisible = failed
-        if (failed) binding.snippet.setTextColor(context.getColorCompat(R.color.failed))
+        binding.snippet.setTextColor(when {
+            failed -> context.getColorCompat(R.color.failed)
+            // The view's context, not the injected one: only the view's carries the app theme.
+            getItemViewType(position) == 1 -> binding.snippet.context.resolveThemeColor(android.R.attr.textColorPrimary)   // unread
+            else -> binding.snippet.context.resolveThemeColor(android.R.attr.textColorSecondary)
+        })
     }
 
     override fun getItemId(position: Int): Long {

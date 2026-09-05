@@ -192,6 +192,8 @@
     <string name="settings_category_qkreply">Risposta QK</string>
     <string name="settings_theme_title">Tema</string>
     <string name="settings_shape_title">Forma dei controlli</string>
+    <string name="settings_bubble_title">Forma dei messaggi</string>
+    <string name="settings_outgoing_accent_title">Colora i messaggi inviati</string>
     <string name="settings_night_title">Modalità notturna</string>
     <string name="settings_black_title">Modalità notte nero puro</string>
     <string name="settings_night_start_title">Ora di inizio</string>

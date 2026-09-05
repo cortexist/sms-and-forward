@@ -229,6 +229,12 @@
             android:name=".feature.widget.WidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
+        <!-- WorkManager's foreground service must carry a type from API 34 on. -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
         <!-- sms-bridge live link: long-polls the box while the human is at the desk (LiveLink). -->
         <service
             android:name=".service.LiveBridgeService"

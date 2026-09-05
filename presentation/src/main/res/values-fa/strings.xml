@@ -189,6 +189,8 @@
     <string name="settings_category_qkreply">پاسخ سریع</string>
     <string name="settings_theme_title">پوسته</string>
     <string name="settings_shape_title">شکل کنترل‌ها</string>
+    <string name="settings_bubble_title">شکل پیام‌ها</string>
+    <string name="settings_outgoing_accent_title">رنگ‌آمیزی پیام‌های ارسالی</string>
     <string name="settings_night_title">حالت شب</string>
     <string name="settings_black_title">حالت شب کاملا سیاه</string>
     <string name="settings_night_start_title">زمان آغاز</string>

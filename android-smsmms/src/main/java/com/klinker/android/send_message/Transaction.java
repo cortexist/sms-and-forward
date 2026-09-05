@@ -16,6 +16,7 @@
 
 package com.klinker.android.send_message;
 
+import androidx.core.content.ContextCompat;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.*;
@@ -494,7 +495,7 @@ public class Transaction {
 
                 };
 
-                context.registerReceiver(receiver, filter);
+                ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
             } catch (Throwable e) {
                 Timber.e(e, "exception thrown");
             }

@@ -190,6 +190,8 @@
     <string name="settings_category_qkreply">빠른 응답</string>
     <string name="settings_theme_title">테마</string>
     <string name="settings_shape_title">컨트롤 모양</string>
+    <string name="settings_bubble_title">메시지 모양</string>
+    <string name="settings_outgoing_accent_title">보낸 메시지에 색상 적용</string>
     <string name="settings_night_title">나이트 모드</string>
     <string name="settings_black_title">완전한 블랙 테마</string>
     <string name="settings_night_start_title">시작 시간</string>

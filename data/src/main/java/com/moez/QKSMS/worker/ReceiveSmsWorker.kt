@@ -131,9 +131,11 @@ class ReceiveSmsWorker(appContext: Context, workerParams: WorkerParameters)
         return Result.success()
     }
 
-    override fun getForegroundInfo() = ForegroundInfo(
-        0,
-        notificationManager.getForegroundNotificationForWorkersOnOlderAndroids()
-    )
+    override fun getForegroundInfo() = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        ForegroundInfo(0, notificationManager.getForegroundNotificationForWorkersOnOlderAndroids(),
+            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)   // required from API 34
+    } else {
+        ForegroundInfo(0, notificationManager.getForegroundNotificationForWorkersOnOlderAndroids())
+    }
 
 }

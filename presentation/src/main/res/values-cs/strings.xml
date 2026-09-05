@@ -193,6 +193,8 @@
     <string name="settings_category_qkreply">Rychlá odpověď</string>
     <string name="settings_theme_title">Motiv vzhledu</string>
     <string name="settings_shape_title">Tvar ovládacích prvků</string>
+    <string name="settings_bubble_title">Tvar zpráv</string>
+    <string name="settings_outgoing_accent_title">Barevné odchozí zprávy</string>
     <string name="settings_night_title">Noční režim</string>
     <string name="settings_black_title">Čistá černá, noční režim</string>
     <string name="settings_night_start_title">Čas zahájení</string>

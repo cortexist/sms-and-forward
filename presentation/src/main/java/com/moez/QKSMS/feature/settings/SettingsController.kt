@@ -65,6 +65,10 @@ private val SHAPE_ICONS = listOf(   // [outline, filled] per Preferences.SHAPE_*
     listOf(R.drawable.ic_shape_round, R.drawable.ic_shape_round_filled),
     listOf(R.drawable.ic_shape_squircle, R.drawable.ic_shape_squircle_filled))
 
+private val BUBBLE_ICONS = listOf(   // [outline, filled] per Preferences.BUBBLE_* index
+    listOf(R.drawable.ic_shape_square, R.drawable.ic_shape_square_filled),
+    listOf(R.drawable.ic_bubble_rounded, R.drawable.ic_bubble_rounded_filled))
+
 class SettingsController : QkController<SettingsControllerBinding, SettingsView, SettingsState, SettingsPresenter>(), SettingsView {
 
     override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup): SettingsControllerBinding =
@@ -99,6 +103,7 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     private val bridgeEndpointSubject: Subject<String> = PublishSubject.create()
     private val bridgeTokenSubject: Subject<String> = PublishSubject.create()
     private val controlShapeSubject: Subject<Int> = PublishSubject.create()
+    private val bubbleStyleSubject: Subject<Int> = PublishSubject.create()
 
     private val progressAnimator by lazy { ObjectAnimator.ofInt(binding.syncingProgress, "progress", 0, 0) }
 
@@ -115,6 +120,7 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
         binding.preferences.postDelayed({ binding.preferences.animateLayoutChanges = true }, 100)
 
         shapeViews().forEachIndexed { shape, view -> view.setOnClickListener { controlShapeSubject.onNext(shape) } }
+        bubbleViews().forEachIndexed { style, view -> view.setOnClickListener { bubbleStyleSubject.onNext(style) } }
 
         when (Build.VERSION.SDK_INT >= 29) {
             true -> nightModeDialog.adapter.setData(R.array.night_modes)
@@ -164,6 +170,8 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun bridgeTokenChanged(): Observable<String> = bridgeTokenSubject
 
     override fun controlShapeSelected(): Observable<Int> = controlShapeSubject
+
+    override fun bubbleStyleSelected(): Observable<Int> = bubbleStyleSubject
 
     override fun mmsSizeSelected(): Observable<Int> = mmsSizeDialog.adapter.menuItemClicks
 
@@ -225,6 +233,11 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
             view.setImageResource(SHAPE_ICONS[shape][if (shape == state.controlShape) 1 else 0])
             view.imageTintList = ColorStateList.valueOf(state.theme)
         }
+        bubbleViews().forEachIndexed { style, view ->
+            view.setImageResource(BUBBLE_ICONS[style][if (style == state.bubbleStyle) 1 else 0])
+            view.imageTintList = ColorStateList.valueOf(state.theme)
+        }
+        binding.outgoingAccent.checkbox?.isChecked = state.outgoingAccent
 
         when (state.syncProgress) {
             is SyncRepository.SyncProgress.Idle -> binding.syncingProgress.isVisible = false
@@ -279,6 +292,9 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun showBridgeEndpointDialog(endpoint: String) = bridgeEndpointDialog.setText(endpoint).show()
 
     override fun showBridgeTokenDialog(token: String) = bridgeTokenDialog.setText(token).show()
+
+    private fun bubbleViews(): List<ImageView> = listOf(R.id.bubbleBoxes, R.id.bubbleRounded)
+            .map { id -> binding.bubbleStyle.findViewById<ImageView>(id) }
 
     private fun shapeViews(): List<ImageView> = listOf(R.id.shapeSquare, R.id.shapeRounded, R.id.shapeRound, R.id.shapeSquircle)
             .map { id -> binding.controlShape.findViewById<ImageView>(id) }

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_shape_title">നിയന്ത്രണങ്ങളുടെ ആകൃതി</string>
+    <string name="settings_bubble_title">സന്ദേശങ്ങളുടെ ആകൃതി</string>
+    <string name="settings_outgoing_accent_title">അയച്ച സന്ദേശങ്ങൾക്ക് നിറം</string>
 </resources>

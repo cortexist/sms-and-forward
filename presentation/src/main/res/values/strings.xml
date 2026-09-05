@@ -265,6 +265,9 @@
 
     <string name="settings_theme_title">Theme</string>
     <string name="settings_shape_title">Control shape</string>
+    <string name="settings_bubble_title">Message shape</string>
+    <string name="settings_outgoing_accent_title">Colour outgoing messages</string>
+    <string name="settings_outgoing_accent_summary">Your messages take the conversation colour; incoming ones turn grey</string>
     <string name="conversation_failed_cd" translatable="false">Last message failed to send</string>
     <string name="settings_night_title">Night mode</string>
     <string name="settings_black_title">Pure black night mode</string>

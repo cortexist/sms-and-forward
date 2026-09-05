@@ -190,6 +190,8 @@
     <string name="settings_category_qkreply">QK ตอบกลับ</string>
     <string name="settings_theme_title">รูปแบบการแสดงผล</string>
     <string name="settings_shape_title">รูปทรงของตัวควบคุม</string>
+    <string name="settings_bubble_title">รูปทรงของข้อความ</string>
+    <string name="settings_outgoing_accent_title">ใส่สีข้อความที่ส่ง</string>
     <string name="settings_night_title">โหมดกลางคืน</string>
     <string name="settings_black_title">โหมดกลางคืนแบบมืดสนิท</string>
     <string name="settings_night_start_title">เวลาเริ่มต้น</string>

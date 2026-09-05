@@ -195,6 +195,8 @@
     <string name="settings_category_qkreply">رد QK</string>
     <string name="settings_theme_title">السمة</string>
     <string name="settings_shape_title">شكل عناصر التحكم</string>
+    <string name="settings_bubble_title">شكل الرسائل</string>
+    <string name="settings_outgoing_accent_title">تلوين الرسائل الصادرة</string>
     <string name="settings_night_title">الوضع الليلي</string>
     <string name="settings_black_title">وضع ليلي بسوادٍ حالك</string>
     <string name="settings_night_start_title">وقت البدء</string>

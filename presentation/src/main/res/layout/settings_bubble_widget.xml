@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Two outlines, theme-tinted, the chosen one filled: sharp boxes or QUIK's rounded bubbles. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content" android:layout_height="match_parent"
+    android:gravity="center_vertical" android:orientation="horizontal"
+    android:paddingStart="4dp" android:paddingEnd="4dp">
+    <ImageView android:id="@+id/bubbleBoxes" android:layout_width="36dp" android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Boxes"
+        android:padding="6dp" android:src="@drawable/ic_shape_square" />
+    <ImageView android:id="@+id/bubbleRounded" android:layout_width="36dp" android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Rounded bubbles"
+        android:padding="6dp" android:src="@drawable/ic_bubble_rounded" />
+</LinearLayout>

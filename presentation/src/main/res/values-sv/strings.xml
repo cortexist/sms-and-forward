@@ -191,6 +191,8 @@
     <string name="settings_category_qkreply">QK svar</string>
     <string name="settings_theme_title">Tema</string>
     <string name="settings_shape_title">Kontrollernas form</string>
+    <string name="settings_bubble_title">Meddelandeform</string>
+    <string name="settings_outgoing_accent_title">Färga utgående meddelanden</string>
     <string name="settings_night_title">Nattläge</string>
     <string name="settings_black_title">Svart nattläge</string>
     <string name="settings_night_start_title">Starttid</string>

@@ -193,6 +193,8 @@
     <string name="settings_category_qkreply">QK-ответ</string>
     <string name="settings_theme_title">Тема</string>
     <string name="settings_shape_title">Форма элементов управления</string>
+    <string name="settings_bubble_title">Форма сообщений</string>
+    <string name="settings_outgoing_accent_title">Цвет исходящих сообщений</string>
     <string name="settings_night_title">Ночной режим</string>
     <string name="settings_black_title">Полностью чёрный ночной режим</string>
     <string name="settings_night_start_title">Время начала</string>

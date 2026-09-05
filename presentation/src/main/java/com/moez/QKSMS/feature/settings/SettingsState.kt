@@ -55,5 +55,7 @@ data class SettingsState(
     val bridgeEndpoint: String = "",
     val bridgeTokenHint: String = "",   // first and last characters of the token, or blank
     val controlShape: Int = Preferences.SHAPE_SQUARE,
+    val bubbleStyle: Int = Preferences.BUBBLE_BOXES,
+    val outgoingAccent: Boolean = false,
     val syncProgress: SyncRepository.SyncProgress = SyncRepository.SyncProgress.Idle
 )

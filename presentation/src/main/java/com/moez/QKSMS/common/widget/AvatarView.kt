@@ -26,6 +26,8 @@ import dev.octoshrimpy.quik.R
 import dev.octoshrimpy.quik.common.Navigator
 import dev.octoshrimpy.quik.common.util.Colors
 import dev.octoshrimpy.quik.common.util.extensions.setBackgroundTint
+import dev.octoshrimpy.quik.bridge.AgentRegistry
+import dev.octoshrimpy.quik.bridge.AgentIdentity
 import dev.octoshrimpy.quik.common.util.extensions.setTint
 import dev.octoshrimpy.quik.databinding.AvatarViewBinding
 import dev.octoshrimpy.quik.injection.appComponent
@@ -45,6 +47,7 @@ class AvatarView @JvmOverloads constructor(
     private var photoUri: String? = null
     private var lastUpdated: Long? = null
     private var theme: Colors.Theme
+    private var agent: AgentIdentity? = null
     private var layout: AvatarViewBinding
 
     init {
@@ -68,6 +71,7 @@ class AvatarView @JvmOverloads constructor(
         photoUri = recipient?.contact?.photoUri
         lastUpdated = recipient?.contact?.lastUpdate
         theme = colors.theme(recipient)
+        agent = AgentRegistry.get(context, recipient?.address)
         updateView()
     }
 
@@ -80,6 +84,22 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun updateView() {
+        // An agent: the face (two backtick eyes, as on the launcher icon) on the agent's own
+        // colour and shape -- the same two parameters its card carries on the box.
+        agent?.let { a ->
+            setBackgroundTint(a.color)
+            (background as? ControlShapeDrawable)?.shapeOverride = a.shape.takeIf { it >= 0 }
+            val ink = colors.textPrimaryOnThemeForColor(a.color)
+            layout.initial.setTextColor(ink)
+            layout.initial.setTypeface(layout.initial.typeface, android.graphics.Typeface.BOLD)
+            layout.initial.text = "``"
+            layout.icon.visibility = GONE
+            layout.photo.visibility = GONE
+            return
+        }
+        (background as? ControlShapeDrawable)?.shapeOverride = null
+        layout.photo.visibility = VISIBLE   // a recycled view may have been an agent's
+
         // Apply theme
         setBackgroundTint(theme.theme)
         layout.initial.setTextColor(theme.textPrimary)

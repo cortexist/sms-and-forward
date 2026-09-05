@@ -40,6 +40,18 @@
         <enum name="emoji" value="5" />
     </attr>
 
+    <declare-styleable name="MessageBubble">
+        <attr name="bubbleCorners" format="enum">
+            <enum name="only" value="0" />
+            <enum name="inFirst" value="1" />
+            <enum name="inMiddle" value="2" />
+            <enum name="inLast" value="3" />
+            <enum name="outFirst" value="4" />
+            <enum name="outMiddle" value="5" />
+            <enum name="outLast" value="6" />
+        </attr>
+    </declare-styleable>
+
     <declare-styleable name="QkTextView">
         <attr name="textColor" />
         <attr name="textSize" />

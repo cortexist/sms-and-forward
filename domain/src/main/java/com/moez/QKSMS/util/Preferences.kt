@@ -54,6 +54,9 @@ class Preferences @Inject constructor(
         const val SHAPE_ROUND = 2
         const val SHAPE_SQUIRCLE = 3
 
+        const val BUBBLE_BOXES = 0      // Omarchy: sharp
+        const val BUBBLE_ROUNDED = 1    // QUIK's original rounded bubbles
+
         const val NOTIFICATION_PREVIEWS_ALL = 0
         const val NOTIFICATION_PREVIEWS_NAME = 1
         const val NOTIFICATION_PREVIEWS_NONE = 2
@@ -116,6 +119,13 @@ class Preferences @Inject constructor(
     // Avatars and round buttons. Square is the Omarchy look; the others let the app follow
     // whatever shape the launcher gives its icons, which the app has no way to ask for.
     val controlShape = rxPrefs.getInteger("controlShape", SHAPE_SQUARE)
+    // Message bubbles: sharp boxes (the Omarchy default) or QUIK's rounded bubbles, kept as an
+    // option out of respect for the app this is a fork of.
+    val bubbleStyle = rxPrefs.getInteger("bubbleStyle", BUBBLE_BOXES)
+    // Which side carries the conversation colour. QUIK colours incoming messages and leaves
+    // yours grey; on a pure-black screen that grey nearly vanishes, so this flips it: your
+    // messages take the colour and incoming ones turn grey.
+    val outgoingAccent = rxPrefs.getBoolean("outgoingAccent", false)
     val showStt = rxPrefs.getBoolean("showStt", true)
     val showSttOffsetX = rxPrefs.getFloat("showSttOffsetX", Float.MIN_VALUE)
     val showSttOffsetY = rxPrefs.getFloat("showSttOffsetY", Float.MIN_VALUE)

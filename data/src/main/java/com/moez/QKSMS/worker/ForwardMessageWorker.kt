@@ -26,6 +26,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dev.octoshrimpy.quik.bridge.BridgeConfig
+import dev.octoshrimpy.quik.bridge.BridgeIds
 import dev.octoshrimpy.quik.bridge.PartUploader
 import dev.octoshrimpy.quik.model.Message
 import dev.octoshrimpy.quik.repository.MessageRepository
@@ -156,7 +157,8 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
 
     /**
      * The v1 record shape. `id` must be stable across retries or every retry duplicates on the
-     * far side - the Realm primary key gives us that for free.
+     * far side; it is the provider row id (see BridgeIds), because the Realm id is renumbered
+     * on every full sync.
      */
     private fun base(endpoint: String) = endpoint.removeSuffix("/sms").trimEnd('/')
 
@@ -171,7 +173,7 @@ class ForwardMessageWorker(appContext: Context, params: WorkerParameters)
         }
 
         return JSONObject().apply {
-            put("id", "$kind:${message.id}")
+            put("id", BridgeIds.of(message))
             // "out" is only ever a reply in the AGENTS thread, which
             // MessageRepositoryImpl routes here instead of to the radio.
             put("dir", if (message.isMe()) "out" else "in")

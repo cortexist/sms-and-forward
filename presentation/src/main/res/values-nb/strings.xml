@@ -191,6 +191,8 @@
     <string name="settings_category_qkreply">Raskt svar</string>
     <string name="settings_theme_title">Drakt</string>
     <string name="settings_shape_title">Kontrollform</string>
+    <string name="settings_bubble_title">Meldingsform</string>
+    <string name="settings_outgoing_accent_title">Farg utgående meldinger</string>
     <string name="settings_night_title">Nattmodus</string>
     <string name="settings_black_title">Ren svart nattmodus</string>
     <string name="settings_night_start_title">Starttid</string>

@@ -35,7 +35,7 @@ class CommandApplier(
     /** The command's outcome for the ack: a string, or a JSON object for commands that are questions. */
     fun apply(op: String, args: JSONObject, base: String, token: String, client: OkHttpClient): Any = when (op) {
         "delete_messages" -> {
-            val ids = args.longsFromIds("ids")
+            val ids = args.strings("ids").mapNotNull { BridgeIds.resolve(it)?.id }
             messageRepo.deleteMessages(ids)
             "deleted ${ids.size}"
         }
@@ -97,8 +97,7 @@ class CommandApplier(
         }
         "fetch_attachment" -> {
             val sha = args.optString("sha")
-            val mid = args.optString("message").substringAfterLast(':').toLongOrNull()
-            val msg = if (mid != null) messageRepo.getMessage(mid) else null
+            val msg = args.optString("message").takeIf { it.isNotBlank() }?.let { BridgeIds.resolve(it) }
             when {
                 sha.isBlank() || msg == null -> "no such message"
                 PartUploader.sendOne(context, msg, sha, base, token, client) -> "sent $sha"
@@ -125,7 +124,7 @@ class CommandApplier(
                     conversationRepo.updateConversations(threads)
                     conversationRepo.markUnarchived(threads)
                     sent.forEach { ForwardMessageWorker.enqueue(context, it.id) }
-                    JSONObject().put("messages", JSONArray(sent.map { "sms:${it.id}" }))
+                    JSONObject().put("messages", JSONArray(sent.map { BridgeIds.of(it) }))
                 }
             }
         }
@@ -133,13 +132,27 @@ class CommandApplier(
         // the notification, but never the forwarder (see AgentChannel).
         "notify" -> {
             val body = args.optString("body")
-            if (body.isBlank()) "refused: empty body" else {
-                val msg = messageRepo.insertReceivedSms(-1, AgentChannel.ADDRESS, body, System.currentTimeMillis())
-                WorkManager.getInstance(context).enqueue(
-                    OneTimeWorkRequestBuilder<ReceiveSmsWorker>()
-                        .setInputData(workDataOf(ReceiveSmsWorker.INPUT_DATA_KEY_MESSAGE_ID to msg.id))
-                        .build())
-                JSONObject().put("message", "sms:${msg.id}")
+            val addr = args.optString("addr").trim().ifBlank { AgentChannel.CHIEF }
+            when {
+                body.isBlank() -> "refused: empty body"
+                !AgentChannel.isAgent(addr) -> "refused: $addr is not an agent address"
+                else -> {
+                    // The agent's identity rides along: name, colour, shape. Recorded first so
+                    // the thread shows the face and the name from its very first message.
+                    AgentRegistry.record(context, addr, args.optString("name").takeIf { it.isNotBlank() },
+                        args.optString("color").takeIf { it.isNotBlank() },
+                        if (args.has("shape")) args.optInt("shape") else null)
+                    val msg = messageRepo.insertReceivedSms(-1, addr, body, System.currentTimeMillis())
+                    AgentRegistry.get(context, addr)?.let { agent ->
+                        conversationRepo.getOrCreateConversation(msg.threadId)
+                        conversationRepo.setConversationName(msg.threadId, agent.name).blockingAwait()
+                    }
+                    WorkManager.getInstance(context).enqueue(
+                        OneTimeWorkRequestBuilder<ReceiveSmsWorker>()
+                            .setInputData(workDataOf(ReceiveSmsWorker.INPUT_DATA_KEY_MESSAGE_ID to msg.id))
+                            .build())
+                    JSONObject().put("message", BridgeIds.of(msg)).put("addr", addr)
+                }
             }
         }
         "location" -> PhoneLocation.report(context)
@@ -147,12 +160,6 @@ class CommandApplier(
         "live_status" -> LiveLink.status(context)
         else -> "unsupported op"
     }
-}
-
-// The desktop identifies messages as "sms:<rowid>" / "mms:<rowid>" -- the Realm primary key.
-private fun JSONObject.longsFromIds(key: String): List<Long> {
-    val a = optJSONArray(key) ?: return emptyList()
-    return (0 until a.length()).mapNotNull { a.optString(it).substringAfterLast(':').toLongOrNull() }
 }
 
 private fun JSONObject.longs(key: String): List<Long> {

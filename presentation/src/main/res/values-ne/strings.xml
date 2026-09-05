@@ -191,6 +191,8 @@
     <string name="settings_category_qkreply">QK Reply</string>
     <string name="settings_theme_title">Theme</string>
     <string name="settings_shape_title">नियन्त्रणको आकार</string>
+    <string name="settings_bubble_title">सन्देशको आकार</string>
+    <string name="settings_outgoing_accent_title">पठाइएका सन्देशहरूमा रङ</string>
     <string name="settings_night_title">Night mode</string>
     <string name="settings_black_title">Pure black night mode</string>
     <string name="settings_night_start_title">Start time</string>

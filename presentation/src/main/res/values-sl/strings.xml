@@ -193,6 +193,8 @@
     <string name="settings_category_qkreply">QK Odgovor</string>
     <string name="settings_theme_title">Teme</string>
     <string name="settings_shape_title">Oblika kontrolnikov</string>
+    <string name="settings_bubble_title">Oblika sporočil</string>
+    <string name="settings_outgoing_accent_title">Obarvaj odhodna sporočila</string>
     <string name="settings_night_title">Nočni način</string>
     <string name="settings_black_title">Črn nočni način</string>
     <string name="settings_night_start_title">Začetni čas</string>

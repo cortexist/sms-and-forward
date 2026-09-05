@@ -601,7 +601,7 @@ open class MessageRepositoryImpl @Inject constructor(
             context, subId, body, prefs.signature.get(),
             // AGENTS is a name, not a number; normalising it would keypad-map the
             // letters to digits and the reply would go to a stranger.
-            toAddresses.map { if (AgentChannel.isAgent(it)) AgentChannel.ADDRESS else phoneNumberUtils.normalizeNumber(it) }
+            toAddresses.map { if (AgentChannel.isAgent(it)) it.trim() else phoneNumberUtils.normalizeNumber(it) }
                 .toTypedArray(),
             parts, group, prefs.longAsMms.get(), prefs.unicode.get()
         )

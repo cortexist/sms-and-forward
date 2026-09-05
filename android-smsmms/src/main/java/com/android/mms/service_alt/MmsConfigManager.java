@@ -16,6 +16,7 @@
 
 package com.android.mms.service_alt;
 
+import androidx.core.content.ContextCompat;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -80,7 +81,7 @@ public class MmsConfigManager {
                     new IntentFilter("LOADED");
 
             try {
-                context.registerReceiver(mReceiver, intentFilterLoaded);
+                ContextCompat.registerReceiver(context, mReceiver, intentFilterLoaded, ContextCompat.RECEIVER_NOT_EXPORTED);
             } catch (Exception e) {
 
             }

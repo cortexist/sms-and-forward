@@ -35,6 +35,7 @@ interface SettingsView : QkViewContract<SettingsState> {
     fun bridgeEndpointChanged(): Observable<String>
     fun bridgeTokenChanged(): Observable<String>
     fun controlShapeSelected(): Observable<Int>
+    fun bubbleStyleSelected(): Observable<Int>
     fun mmsSizeSelected(): Observable<Int>
     fun messageLinkHandlingSelected(): Observable<Int>
 

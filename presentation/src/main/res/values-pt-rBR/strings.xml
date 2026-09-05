@@ -191,6 +191,8 @@
     <string name="settings_category_qkreply">Responder via SMS &amp; Forward</string>
     <string name="settings_theme_title">Tema</string>
     <string name="settings_shape_title">Forma dos controles</string>
+    <string name="settings_bubble_title">Forma das mensagens</string>
+    <string name="settings_outgoing_accent_title">Colorir mensagens enviadas</string>
     <string name="settings_night_title">Modo noturno</string>
     <string name="settings_black_title">Modo noturno preto puro</string>
     <string name="settings_night_start_title">Hora de início</string>

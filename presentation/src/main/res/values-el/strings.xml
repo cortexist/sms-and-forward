@@ -191,6 +191,8 @@
     <string name="settings_category_qkreply">Γρήγορη απάντηση</string>
     <string name="settings_theme_title">Θέμα εμφάνισης</string>
     <string name="settings_shape_title">Σχήμα στοιχείων ελέγχου</string>
+    <string name="settings_bubble_title">Σχήμα μηνυμάτων</string>
+    <string name="settings_outgoing_accent_title">Χρωματισμός εξερχόμενων μηνυμάτων</string>
     <string name="settings_night_title">Νυχτερινή λειτουργία</string>
     <string name="settings_black_title">Νυχτερινή λειτουργία καθαρού μαύρου</string>
     <string name="settings_night_start_title">Ώρα έναρξης</string>

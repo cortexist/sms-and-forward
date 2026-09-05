@@ -51,6 +51,8 @@ import dev.octoshrimpy.quik.common.util.extensions.dpToPx
 import dev.octoshrimpy.quik.common.util.extensions.setBackgroundTint
 import dev.octoshrimpy.quik.common.util.extensions.setPadding
 import dev.octoshrimpy.quik.common.util.extensions.setTint
+import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
+import dev.octoshrimpy.quik.common.util.extensions.getColorCompat
 import dev.octoshrimpy.quik.common.util.extensions.setVisible
 import dev.octoshrimpy.quik.common.util.extensions.withAlpha
 import dev.octoshrimpy.quik.compat.SubscriptionManagerCompat
@@ -195,7 +197,10 @@ class MessagesAdapter @Inject constructor(
         val previous = if (position == 0) null else getItem(position - 1)
         val next = if (position == itemCount - 1) null else getItem(position + 1)
 
-        val theme = when (message.isOutgoingMessage()) {
+        // The conversation's colour for both sides: with "colour outgoing messages" on, yours
+        // wear it and incoming ones go grey; otherwise incoming wear it, as QUIK always did.
+        val outgoingAccent = prefs.outgoingAccent.get()
+        val theme = when (message.isOutgoingMessage() && !outgoingAccent) {
             true -> colors.theme()
             false -> colors.theme(contactCache[message.address])
         }
@@ -269,6 +274,13 @@ class MessagesAdapter @Inject constructor(
             }
 
             body.apply {
+                if (outgoingAccent) {
+                    setBackgroundTint(theme.theme)
+                    setTextColor(theme.textPrimary)
+                } else {
+                    setBackgroundTint(context.resolveThemeColor(R.attr.bubbleColor))
+                    setTextColor(context.resolveThemeColor(android.R.attr.textColorPrimary))
+                }
                 highlightColor = theme.theme.withAlpha(0x5d)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     textSelectHandle?.setTint(theme.theme.withAlpha(0xad))
@@ -294,8 +306,13 @@ class MessagesAdapter @Inject constructor(
             }
 
             body.apply {
-                setTextColor(theme.textPrimary)
-                setBackgroundTint(theme.theme)
+                if (outgoingAccent) {
+                    setBackgroundTint(context.resolveThemeColor(R.attr.bubbleColor))
+                    setTextColor(context.resolveThemeColor(android.R.attr.textColorPrimary))
+                } else {
+                    setTextColor(theme.textPrimary)
+                    setBackgroundTint(theme.theme)
+                }
                 highlightColor = R.attr.bubbleColor.withAlpha(0x5d)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     textSelectHandle?.setTint(R.attr.bubbleColor.withAlpha(0x7d))
@@ -472,6 +489,15 @@ class MessagesAdapter @Inject constructor(
                     "${contactCache[message.address]?.getDisplayName()} • ${
                         dateFormatter.getTimestamp(message.date)}"
                 else -> dateFormatter.getTimestamp(message.date)
+            }
+
+            // A failure must not read like a timestamp. Reset when not failed: the view is recycled.
+            if (message.isFailedMessage()) {
+                setTextColor(context.getColorCompat(R.color.failed))
+                setTypeface(typeface, Typeface.BOLD)
+            } else {
+                setTextColor(statusView.context.resolveThemeColor(android.R.attr.textColorSecondary))   // the view's themed context
+                setTypeface(typeface, Typeface.NORMAL)
             }
 
             val age = TimeUnit.MILLISECONDS.toMinutes(

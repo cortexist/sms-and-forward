@@ -226,6 +226,8 @@
     <string name="settings_category_qkreply">Răspuns rapid</string>
     <string name="settings_theme_title">Tematică</string>
     <string name="settings_shape_title">Forma controalelor</string>
+    <string name="settings_bubble_title">Forma mesajelor</string>
+    <string name="settings_outgoing_accent_title">Colorează mesajele trimise</string>
     <string name="settings_night_title">Modul nocturn</string>
     <string name="settings_black_title">Mod pur negru de noapte</string>
     <string name="settings_night_start_title">Ora de începere</string>

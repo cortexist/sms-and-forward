@@ -158,6 +158,12 @@ class SettingsPresenter @Inject constructor(
         disposables += prefs.controlShape.asObservable()
             .subscribe { shape -> newState { copy(controlShape = shape) } }
 
+        disposables += prefs.bubbleStyle.asObservable()
+            .subscribe { style -> newState { copy(bubbleStyle = style) } }
+
+        disposables += prefs.outgoingAccent.asObservable()
+            .subscribe { on -> newState { copy(outgoingAccent = on) } }
+
         disposables += syncRepo.syncProgress
                 .sample(16, TimeUnit.MILLISECONDS)
                 .distinctUntilChanged()
@@ -240,6 +246,10 @@ class SettingsPresenter @Inject constructor(
                         // Tapping the row itself steps to the next shape; the widget's outlines pick directly.
                         R.id.controlShape -> prefs.controlShape.set((prefs.controlShape.get() + 1) % 4)
 
+                        R.id.bubbleStyle -> prefs.bubbleStyle.set(1 - prefs.bubbleStyle.get())
+
+                        R.id.outgoingAccent -> prefs.outgoingAccent.set(!prefs.outgoingAccent.get())
+
                         R.id.sync -> syncMessages.execute(Unit)
 
                         R.id.about -> view.showAbout()
@@ -312,6 +322,11 @@ class SettingsPresenter @Inject constructor(
 
         view.controlShapeSelected()
                 .doOnNext(prefs.controlShape::set)
+                .autoDisposable(view.scope())
+                .subscribe()
+
+        view.bubbleStyleSelected()
+                .doOnNext(prefs.bubbleStyle::set)
                 .autoDisposable(view.scope())
                 .subscribe()
 
