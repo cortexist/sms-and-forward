@@ -404,8 +404,8 @@
     <string name="theme_hex">HEX</string>
     <string name="theme_apply">Appliquer</string>
     <string name="about_developer" translatable="false">Une équipe de merveilleux développeurs du monde entier !</string>
-    <string name="about_source" translatable="false">https://github.com/cortexist/sms-forward</string>
-    <string name="about_changelog" translatable="false">https://github.com/cortexist/sms-forward/releases</string>
+    <string name="about_source" translatable="false">https://github.com/cortexist/sms-and-forward</string>
+    <string name="about_changelog" translatable="false">https://github.com/cortexist/sms-and-forward/releases</string>
     <string name="about_contact" translatable="false">engineering@cortexist.com</string>
     <string name="about_license" translatable="false">GNU General Public License v3.0</string>
     <string name="about_copyright" translatable="false">© 2014–2024</string>

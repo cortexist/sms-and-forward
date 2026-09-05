@@ -10,10 +10,10 @@
  * app is open (`live.wanted`). Either condition ending ends the session and the
  * phone falls back to the queue. The phone still initiates every connection.
  *
- * "On the box's LAN" is decided first by the phone's own wifi address lying in
- * one of the subnets the box reports (`live.lan`), which needs no permission at
- * all; the access point BSSID (`live.bssids`) is the second test, because Android
- * masks the BSSID for background callers in more situations than it documents.
+ * "On the box's LAN" means the phone's own wifi address lies in one of the
+ * subnets the box reports (`live.lan`). That needs no permission at all, which
+ * is why it is the only test: the access-point BSSID would need a location
+ * permission, and this app asks for none.
  *
  * The last hint and decision are kept for the `live_status` command, since the
  * only log this app writes lands in Downloads and is awkward to read from a box.
@@ -21,13 +21,9 @@
 package dev.octoshrimpy.quik.bridge
 
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import dev.octoshrimpy.quik.service.LiveBridgeService
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.Inet4Address
-import java.net.NetworkInterface
 
 object LiveLink {
 
@@ -47,50 +43,21 @@ object LiveLink {
         lastHint = live
         if (live == null) { note(context, "decision", "no live hint in response"); return false }
         if (!live.optBoolean("wanted", false)) { note(context, "decision", "not wanted (no desktop app open)"); return false }
-        val ips = wifiAddresses(context)
+        val ips = PhoneLocation.wifiAddresses(context)
         val lan = live.optJSONArray("lan").strings()
         val onLan = ips.any { ip -> lan.any { inCidr(ip, it) } }
-        val here = PhoneLocation.wifiBssid(context)?.lowercase()
-        // One access point, two radios: the 2.4 and 5 GHz BSSIDs differ in the last hex
-        // digit, so match on the first five octets.
-        val bssidMatch = here != null && live.optJSONArray("bssids").strings()
-            .any { it.lowercase().dropLast(1) == here.dropLast(1) }
-        note(context, "decision", "wanted; wifi ips=$ips lan=$lan onLan=$onLan; bssid=${here ?: "masked/none"} match=$bssidMatch")
-        return onLan || bssidMatch
+        note(context, "decision", "wanted; wifi ips=$ips lan=$lan onLan=$onLan")
+        return onLan
     }
 
     /** For the `live_status` command: everything the decision is made from, plus the outcome. */
     fun status(context: Context): JSONObject = JSONObject()
         .put("running", LiveBridgeService.running)
-        .put("wifi_ips", JSONArray(wifiAddresses(context)))
-        .put("wifi_bssid", PhoneLocation.wifiBssid(context) ?: JSONObject.NULL)
+        .put("wifi_ips", JSONArray(PhoneLocation.wifiAddresses(context)))
         .put("last_hint", lastHint ?: JSONObject.NULL)
         .put("last_decision", noted(context, "decision") ?: "never evaluated")
         .put("last_error", noted(context, "error") ?: JSONObject.NULL)
         .put("service_error", noted(context, "service_error") ?: JSONObject.NULL)
-
-    /** IPv4 addresses of the wifi interface; empty on mobile data or offline.
-     *
-     *  Read through java.net rather than LinkProperties: the framework method's
-     *  signature differs between the compile SDK and this phone's connectivity
-     *  module (NoSuchMethodError on getLinkAddresses), and an Error there killed
-     *  the process with the whole command batch unacked. */
-    private fun wifiAddresses(context: Context): List<String> {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return emptyList()
-        val net = cm.activeNetwork ?: return emptyList()
-        val caps = cm.getNetworkCapabilities(net) ?: return emptyList()
-        if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return emptyList()
-        return try {
-            NetworkInterface.getNetworkInterfaces().toList()
-                .filter { it.isUp && !it.isLoopback && !it.name.startsWith("tun") && !it.name.startsWith("tailscale") }
-                .flatMap { it.inetAddresses.toList() }
-                .filterIsInstance<Inet4Address>()
-                .filter { !it.isLoopbackAddress && !it.isLinkLocalAddress }
-                .mapNotNull { it.hostAddress }
-        } catch (e: Throwable) {
-            emptyList()
-        }
-    }
 
     private fun inCidr(ip: String, cidr: String): Boolean {
         val (net, bitsStr) = cidr.split("/").let { if (it.size == 2) it[0] to it[1] else return false }

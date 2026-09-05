@@ -341,7 +341,7 @@
     <string name="settings_disable_screenshots_title">Disable Screenshots</string>
     <string name="settings_diable_screenshots_summary">Prevent your OS and other apps from taking screenshots of the app.</string>
     <string name="settings_bridge_enabled_title">Forward to SMS bridge</string>
-    <string name="settings_bridge_enabled_summary">Send every incoming message to the bridge endpoint</string>
+    <string name="settings_bridge_enabled_summary">Sends every message you receive and send, with attachments, to the bridge server you set below and nowhere else. That server is yours; Cortexist runs none.</string>
     <string name="settings_bridge_endpoint_title">Bridge endpoint</string>
     <string name="settings_bridge_endpoint_summary">Not set</string>
     <string name="settings_bridge_token_title">Bridge token</string>
@@ -474,8 +474,8 @@
     <string name="theme_apply">Apply</string>
 
     <string name="about_developer">A team of wonderful people from around the world!</string>
-    <string name="about_source" translatable="false">https://github.com/cortexist/sms-forward</string>
-    <string name="about_changelog" translatable="false">https://github.com/cortexist/sms-forward/releases</string>
+    <string name="about_source" translatable="false">https://github.com/cortexist/sms-and-forward</string>
+    <string name="about_changelog" translatable="false">https://github.com/cortexist/sms-and-forward/releases</string>
     <string name="about_contact" translatable="false">engineering@cortexist.com</string>
     <string name="about_license" translatable="false">GNU General Public License v3.0</string>
     <string name="about_copyright" translatable="false">© 2014–2026</string>

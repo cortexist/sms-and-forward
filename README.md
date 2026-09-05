@@ -29,8 +29,9 @@ agents to use it.
 - **Talks to your agents.** Agents on your computer can put a message in front of you as a text
   from **AGENTS**, in its own thread in this app. Whatever you type back in that thread reaches
   them. `AGENTS` is not a number, so nothing in that thread can ever reach a carrier.
-- **Answers "where is the phone".** With location allowed, the bridge can ask whether the phone
-  is near the computer, so an agent only texts you when you are actually away.
+- **Answers "is the phone home".** The bridge can ask whether the phone is on the same network
+  as the computer, so an agent only texts you when you are actually away. No location
+  permission: the phone reports only its own wifi address.
 - **Looks like your desktop.** Monospace type, sharp corners, the Tokyo Night and Flexoki
   palettes, and a control-shape setting (square, rounded, round, squircle) to match your
   launcher. Made to sit next to an [Omarchy](https://omarchy.org) desktop.
@@ -44,9 +45,8 @@ archiving, voice messages, pinning, swipe actions, and the rest.
 2. Install the APK and make SMS & Forward the default SMS app.
 3. In **Settings → SMS bridge**, turn forwarding on and enter the bridge endpoint
    (for example `http://100.64.0.3:8090/sms`) and the token.
-4. Optional, for the live link and the perimeter check: allow **Location → All the time**
-   in the app's system settings. The phone reads its own wifi address and access point from
-   a background job, which Android only permits with that grant.
+4. Nothing else. The live link and the perimeter check work from the phone's own wifi
+   address, which needs no extra permission.
 
 The phone polls the bridge every fifteen minutes and whenever it forwards a message; the
 bridge never connects to the phone. There is no listener on the phone and no permanent

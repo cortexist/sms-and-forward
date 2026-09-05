@@ -47,14 +47,14 @@ class ExternalNavigator @Inject constructor(
     private val notificationManager: NotificationManager
 ) : QkNavigator(context) {
     fun showDeveloper() =
-        openExternalActivity("https://github.com/cortexist/sms-forward/graphs/contributors")
+        openExternalActivity("https://github.com/cortexist/sms-and-forward/graphs/contributors")
 
-    fun showSourceCode() = openExternalActivity("https://github.com/cortexist/sms-forward")
+    fun showSourceCode() = openExternalActivity("https://github.com/cortexist/sms-and-forward")
 
-    fun showChangelog() = openExternalActivity("https://github.com/cortexist/sms-forward/releases")
+    fun showChangelog() = openExternalActivity("https://github.com/cortexist/sms-and-forward/releases")
 
     fun showLicense() =
-        openExternalActivity("https://github.com/cortexist/sms-forward/blob/master/LICENSE")
+        openExternalActivity("https://github.com/cortexist/sms-and-forward/blob/master/LICENSE")
 
     fun makePhoneCall(address: String) {
         val action = if (permissions.hasCalling()) Intent.ACTION_CALL else Intent.ACTION_DIAL
@@ -62,10 +62,10 @@ class ExternalNavigator @Inject constructor(
         startActivityExternal(intent)
     }
 
-    fun showDonation() = openExternalActivity("https://github.com/cortexist/sms-forward")
+    fun showDonation() = openExternalActivity("https://github.com/cortexist/sms-and-forward")
 
     fun showRating() {
-        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/cortexist/sms-forward".toUri())
+        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/cortexist/sms-and-forward".toUri())
             .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
                     or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
                     or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
@@ -73,7 +73,7 @@ class ExternalNavigator @Inject constructor(
         try {
             startActivityExternal(intent)
         } catch (_: ActivityNotFoundException) {
-            val url = "https://github.com/cortexist/sms-forward"
+            val url = "https://github.com/cortexist/sms-and-forward"
             startActivityExternal(Intent(Intent.ACTION_VIEW, url.toUri()))
         }
     }
